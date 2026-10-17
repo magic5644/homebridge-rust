@@ -1,8 +1,8 @@
-# Homebridge Rust — dossier de conception
+# Homebridge Rust
 
 Proposition du 17 octobre 2026 pour `magic5644` : un pont domotique économe en ressources, administrable sur le Web, installable sur NAS ou avec Docker, avec intégration Somfy/TaHoma prioritaire.
 
-**État : plan proposé, aucune application implémentée et aucune migration effectuée.** Les objectifs chiffrés sont des critères à mesurer, pas des gains déjà obtenus.
+**État : socle CLI/workspace P02 ; aucune intégration domotique ni migration effectuée.** Les objectifs chiffrés sont des critères à mesurer, pas des gains déjà obtenus.
 
 ## Lire le dossier
 
@@ -15,9 +15,9 @@ Proposition du 17 octobre 2026 pour `magic5644` : un pont domotique économe en 
 
 ## Une session par ticket
 
-Commencer par [l'état courant](docs/project-state.md), puis utiliser le [prompt de démarrage](docs/prompts/start-ticket.md) avec **P02**, premier ticket de développement. Les [instructions agents](AGENTS.md) et la [mémoire GitHub Actions](.github/instructions/github-actions-memory.instructions.md) sont versionnées pour les sessions suivantes.
+Commencer par [l'état courant](docs/project-state.md), puis utiliser le [prompt de démarrage](docs/prompts/start-ticket.md) avec le ticket choisi après vérification de ses dépendances. Les [instructions agents](AGENTS.md) et la [mémoire GitHub Actions](.github/instructions/github-actions-memory.instructions.md) sont versionnées pour les sessions suivantes.
 
-La session implémente son ticket, teste, prépare une PR et laisse un rapport ; elle ne démarre pas automatiquement le suivant. Le harnais exécutable (workspace et CI) reste à construire au P02.
+La session implémente son ticket, teste, prépare une PR et laisse un rapport ; elle ne démarre pas automatiquement le suivant. Le harnais exécutable P02 est décrit dans [son rapport](docs/sessions/P02.md).
 
 ## Orientation recommandée
 
@@ -30,3 +30,21 @@ La compatibilité avec toute la maison se vérifie équipement par équipement. 
 Dépôt **public** créé : [magic5644/homebridge-rust](https://github.com/magic5644/homebridge-rust), selon le choix du propriétaire. La publication initiale contient uniquement les documents. Le compte, la visibilité et les fichiers distants ont été vérifiés.
 
 Ne jamais versionner de jetons, de sauvegardes Homebridge réelles, d'identifiants TaHoma, d'adresses des appareils ou de données d'appairage HomeKit. Les exemples et tests utiliseront des valeurs fictives.
+
+## Développer le socle P02
+
+Installer Rust **1.99.1** avec rustfmt et clippy (rustup lit `rust-toolchain.toml`),
+puis lancer à la racine :
+
+```sh
+sh scripts/check.sh
+cargo run -p bridge-server --locked -- --version
+cargo run -p bridge-server --locked -- check --config /chemin/vers/config.toml
+```
+
+`check` lit un fichier UTF-8 sans le modifier et échoue si le chemin est absent,
+inaccessible ou désigne un répertoire. Il ne valide pas encore un schéma métier,
+ne démarre aucun serveur et ne contacte aucun équipement.
+Les trois bibliothèques sont des socles vides pour les tickets suivants.
+
+Versions et licences : [dépendances](docs/dependencies.md). Code sous [MIT](LICENSE).

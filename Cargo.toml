@@ -1,0 +1,18 @@
+[workspace]
+members = [
+    "crates/bridge-core",
+    "crates/integration-tahoma",
+    "crates/transport-homekit",
+    "crates/bridge-server",
+]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99.1"
+license = "MIT"
+publish = false
+
+[workspace.dependencies]
+clap = { version = "=4.6.7", features = ["derive"] }
