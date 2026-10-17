@@ -65,7 +65,7 @@ def save_capture(payload, folder=PRIVATE):
 
 
 def main():
-    if not sys.stdin.isatty() or not sys.stderr.isatty():
+    if not sys.stdin.isatty():
         print("Run this yourself in Terminal; hidden input requires an interactive terminal.", file=sys.stderr)
         return 1
     try:
