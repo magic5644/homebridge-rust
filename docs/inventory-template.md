@@ -14,7 +14,7 @@ Fill in a copy in `private/inventory.md` or another private location. The public
 | Node | 24.21.0 | Required processes and each process's PSS/RSS |
 | Plugin | homebridge-tahoma 2.2.64 child bridge; Somfy Europe/cloud, scenarios exposed | Raw profile declarations and individual overrides |
 | Gateway | TaHoma V2 | Motor models and exact setup capabilities |
-| Local API | Developer API announced; protocol 2026.4.5-7; TLS and GET apiVersion validated | Authentication/setup with a local token |
+| Local API | Developer API announced; protocol 2026.4.5-7; TLS and GET apiVersion validated | Owner-run authenticated setup captured; declarations in tahoma-profiles.md |
 | Controllers | Owner confirms Apple Home/Siri; five scenes/seven automation entries inspected | Versions, hub and actual Matter usage |
 
 ## 2. Visible elements — read-only inspection on October 17, 2026
@@ -23,9 +23,9 @@ Household names are omitted. The following numbers are inventory references, not
 
 | Group | Count | Confirmed | Still to qualify | Ticket |
 |---|---:|---|---|---|
-| Coverings | 11 | Seven positionable/four tilted plugin profiles; owner reports io and RTS | io/RTS split, shutter/blind, commands, position/tilt, calibration | P12/P13 |
-| Thermostats | 2 | AtlanticElectricalHeater profiles in logs | Actual measurement, possible pilot-wire heating, setpoints/modes | P34 |
-| Garage | 1 | Present as Garage Door Opener | Radio, model, pulse/separate commands, state/obstruction | P33 |
+| Coverings | 11 | Seven generic/four Velux io profiles captured; no RTS entry | Physical part numbers, bounds, position feedback/calibration; no tilt command/state declared | P12/P13 |
+| Thermostats | 2 | Two io:AtlanticElectricalHeaterIOComponent declarations | Actual measurement, possible pilot-wire heating, setpoints/modes | P34 |
+| Garage | 1 | io:GarageOpenerIOComponent; separate open/close/stop, no cycle | Physical model, feedback reliability and obstruction (no explicit obstruction state declared) | P33 |
 | Switch | 9 | Logs confirm stored scenarios; owner reports covering/radiator uses through Maison/Siri | Exact per-scenario targets, effects/cancellation | P35 |
 | Total | 23 | UI elements, not necessarily 23 physical devices | Other invisible uses and scene dependencies | P36 |
 
