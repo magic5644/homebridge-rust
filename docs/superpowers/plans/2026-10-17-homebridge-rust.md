@@ -155,13 +155,13 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 **Dependencies:** P02; read-only access to the installation by an authorized session. **Files:** `docs/compatibility.md`, `docs/performance-baseline.md`, `fixtures/tahoma/*.json`, `tests/fixtures_manifest.json`. Real data: Git-excluded `private/`.
 
-**Status:** partial delivery; the existing Homebridge UI and all 23 accessory dialogs were inspected read-only with owner authorization. Remaining raw capabilities and action effects are missing. Resource comparison is deferred to P31/P38 and is not a P03 completion gate. [Coverage and missing evidence](../../compatibility.md), [baseline](../../performance-baseline.md), [session report](../../sessions/P03.md). P02 integration and its exact-commit main CI were verified at startup; P03 is not complete.
+**Status:** partial delivery; the existing Homebridge UI and all 23 accessory dialogs were inspected read-only with owner authorization. Logs now qualify seven positionable/four tilted covering profiles, Atlantic heating, garage and nine manufacturer scenarios. The owner confirms covering/radiator scenario use through Maison/Siri; five Apple scenes and seven automation entries were inspected. Raw capability declarations and exact scenario membership remain missing. Resource comparison is deferred to P31/P38 and is not a P03 completion gate. [Coverage and missing evidence](../../compatibility.md), [baseline](../../performance-baseline.md), [session report](../../sessions/P03.md). P02 integration and its exact-commit main CI were verified at startup; P03 is not complete.
 
 **Produces:** anonymized list of 23 visible elements, distinguishing physical devices/actions, used features, and fallback paths.
 
-- [ ] Collect QTS, Container Station, topology/ports, versions, and relevant plugin configuration; never copy secrets or `persist/` into fixtures.
+- [x] Collect QTS, Container Station, topology/ports, versions, and relevant plugin configuration; reviewed facts in compatibility/baseline. No secrets or `persist/` copied into fixtures.
 - [ ] Obtain raw TaHoma setup evidence through an owner-run read-only capture or an authorized existing integration; the owner retains the token. Collect `controllableName`, commands, states, and models for io/RTS, garage, and heating profiles.
-- [ ] Classify nine Switch elements; record effects and Apple Home usage. UI state is not evidence of a physical measurement.
+- [x] Classify nine Switch elements: existing logs confirm stored manufacturer scenarios; owner reports covering/radiator effects and Maison/Siri use. Exact individual targets remain a P35 qualification prerequisite. Apple scenes/automation dependencies are recorded separately. UI state is not evidence of a physical measurement.
 - Deferred by owner on October 17, 2026 to P31/P38: compare legacy and Rust required processes after warmup, distinguishing host memory, RSS/PSS and cgroup. Not measured and not a P03 blocker.
 - [x] Produce minimal contractual fixtures with fictional data and a manifest validating JSON, files, and absence of real identifiers. All ten are authored examples; detailed event payloads remain illustrative pending capture evidence. Offline checks and review do not establish compatibility.
 
@@ -189,7 +189,7 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 - [ ] `position_bounds`: accept 0/100, reject 101; `unsupported_command`: capability mismatch → `validation_error`.
 - [ ] `quality_is_honest`: unknown has no value; estimates never become measurements; `ownership_blocks_writes` for `legacy`/`observe`.
-- [ ] Implement types, errors, validation; no HTTP logic or TaHoma dependency in core.
+- [ ] Implement types, errors, validation, including mutually exclusive `local_token`/`somfy_account` config; no HTTP logic or TaHoma dependency in core.
 - [ ] Run `cargo test -p bridge-core --test model_contract`, then workspace checks; save shared JSON examples.
 
 **Completion:** consumers work without renaming interfaces at will.
@@ -212,7 +212,7 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 **Produces:** `load_config(path: &Path) -> Result<AppConfig, BridgeError>`; `save_config_atomic(path: &Path, config: &AppConfig) -> Result<(), BridgeError>`; `AppConfig` contains listen, data_dir, TahomaConfig, HomeKitConfig.
 
-- [ ] Tests: invalid config rejected without writing, token never serialized, 0600 files/0700 directories, previous file retained after failed replacement.
+- [ ] Tests: invalid config rejected without writing, token/account credentials never serialized, mixed-mode fields rejected, 0600 files/0700 directories, previous file retained after failed replacement.
 - [ ] Set schema_version=1, default listen `127.0.0.1:8582`, HAP 51827; validate known conflicts without assuming ports are free.
 - [ ] Load secrets from files, not URLs/command arguments; examples contain no real values.
 - [ ] Run `cargo test -p bridge-core --test config_contract`; `bridge-server check` neither connects to nor modifies devices.
@@ -253,11 +253,12 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 **Dependencies:** P10, P07, P03. **Files:** `integration-tahoma/src/{client,dto}.rs`, `integration-tahoma/tests/{http_contract,tls_contract}.rs`, manufacturer CA with documented provenance/fingerprint.
 
-**Produces:** contractual `TahomaClient`/DTOs; reused client, 5 s timeout, 4 MiB setup limit.
+**Produces:** contractual `TahomaClient::connect`/DTOs; explicit local-token (recommended) or account mode, reused client, 5 s timeout, 4 MiB setup limit. Follow the [access guide](../../integrations/tahoma-access.md); validate current account flow from primary implementation evidence before coding.
 
 - [ ] Tests: correct Bearer/CA → setup read; invalid token → dedicated error; wrong CA/name → failure; redirect → no second host contacted.
 - [ ] Tests: ignore system proxy variables for gateway; oversized/truncated response → error, no loop; tolerate extra fields.
-- [ ] Implement only setup/event/execution routes; use official verbs and encode URL segments.
+- [ ] Test account login/session renewal, selected provider/gateway, credential rejection/expiry and redaction using fictional HTTP fixtures; no silent fallback or command replay.
+- [ ] Implement mode-specific authentication and only required setup/event/execution routes; use verified verbs and encode URL segments. Local mDNS is not required in account mode.
 - [ ] Run `cargo test -p integration-tahoma --test http_contract --test tls_contract`; no tokens in captured test logs.
 
 ### P12 — io covering mapping
@@ -394,8 +395,8 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 **Produces:** first account → login → TaHoma test → observe-mode inventory reading.
 
-- [ ] E2E: wrong token/CA shows useful error, never redisplays token; success lists devices without automatic commands/publication.
-- [ ] Accessible fields, French UI, token paste supported; warn before leaving an unsaved form.
+- [ ] E2E: wrong token/CA shows useful error, never redisplays token/password/session; account login/expiry and explicit mode selection tested; success lists devices without automatic commands/publication.
+- [ ] Accessible fields, French UI, local token recommended and account alternative explicit; token paste and linked Somfy app token instructions supported; warn before leaving an unsaved form.
 - [ ] Run `npm run check`, targeted tests, `npm run test:e2e -- setup.spec.ts` on HTTPS simulator; no real equipment.
 
 ### P24 — Devices and commands UI
