@@ -37,7 +37,7 @@ Pxx values are Markdown plan IDs, not GitHub issue numbers. Add an issue/PR link
 | P01 — repository/design | `done`; design published on `main`, initial reference `dec76c0` |
 | Instructions/session memory | Versioned; English-language policy and translation included in P02 at owner request |
 | P02 — Rust workspace/CI | `done`; [PR #1](https://github.com/magic5644/homebridge-rust/pull/1) merged; remote `main` `2c0350c73f2411dabbe1a0d195928593ae566791`, exact-commit [CI passed](https://github.com/magic5644/homebridge-rust/actions/runs/39041606358) |
-| P03 — detailed inventory | `blocked` on remaining capability/action/resource evidence; [draft PR #2](https://github.com/magic5644/homebridge-rust/pull/2), branch `feat/p03-inventory-baseline`, delivers fictional fixtures, 23 individually inspected Homebridge projections and baseline protocol; see [P03 report](sessions/P03.md). Raw TaHoma capabilities, action classification and real measurements remain missing |
+| P03 — detailed inventory | `blocked` on remaining capability/action/resource evidence; [draft PR #2](https://github.com/magic5644/homebridge-rust/pull/2), branch `feat/p03-inventory-baseline`, delivers fictional fixtures, 23 individually inspected Homebridge projections, verified QNAP/container facts and baseline protocol; see [P03 report](sessions/P03.md). Raw TaHoma capabilities, action classification and real measurements remain missing |
 | P04 — HAP decision | Not started; P02 dependency available; no native backend approved |
 | P05 and later | Not started; follow plan dependencies |
 | Application/tests/CI | P02 minimal CLI and six tests integrated; P03 adds offline fictional-fixture validation. No native compatibility or memory gain demonstrated |
@@ -65,6 +65,7 @@ Authentication: existing GitHub CLI session works as `magic5644`. A previous sys
 
 - UI versions rechecked during the owner-authorized P03 follow-up: Homebridge 2.4.0, UI 5.29.0, Node 24.21.0, homebridge-tahoma 2.2.64 child bridge; Ubuntu 22.04.5 x64 container.
 - All 23 Homebridge accessory dialogs inspected read-only: 11 `RollerShutter` projections, 2 `HeatingSystem`, 1 `GarageDoor`, 9 Switch projections with default model/manufacturer. All identify homebridge-tahoma; these are plugin model labels, not physical-model proof. Actual capabilities, action effects and radio split remain unqualified. No credentials or raw configuration inspected.
+- Owner-authorized QNAP UI inspection confirms TS-251+, J1900 (4 cores/4 threads), 2 GB RAM, QTS 5.2.10.3577 Build 20260731, and Container Station 3.1.2.1742. Single running Homebridge container: image/digest and reviewed runtime/network/storage facts in [baseline](performance-baseline.md). No settings or services changed. Instantaneous host metrics do not complete the 30-minute process/cgroup baseline.
 - TaHoma developer API detected; HTTPS with validated CA/DNS; public `apiVersion` read succeeded, protocol `2026.4.5-7`.
 - No TaHoma token used for that test, no physical commands, no Homebridge/NAS modifications. P02 performed no hardware tests.
 
@@ -74,6 +75,6 @@ Internal addresses, PINs, tokens, and household names are excluded from this pub
 
 1. Review the P03 partial-delivery PR and [session evidence](sessions/P03.md). P02 is `done`; do not repeat its pending-merge gate.
 2. Resume **P03 only** using the owner-authorized existing Homebridge UI and privately collected evidence for remaining raw capabilities, action/Apple Home usage, and a complete production resource report or read-only measurement access. The owner keeps the TaHoma token; token transfer is not required. No credentials in chat, Git, CI, or documentation queries.
-3. Collect missing QTS/Container Station/topology/plugin facts, qualify the remaining physical capabilities and nine Switch effects, and measure the unchanged required process set after warmup for 30 minutes. No physical commands or production changes.
+3. Collect missing kernel/plugin facts, qualify the remaining physical capabilities and nine Switch effects, and measure the unchanged required process set after warmup for 30 minutes. No physical commands or production changes.
 4. P03 remains incomplete even if this preparatory PR is merged. Do not mark P05's P03 dependency available until the missing evidence is reviewed. P04 is independently eligible but was not started.
 5. Preserve the distinction between fictional tests, historical UI observations, actual hardware evidence, CI success and integration on `main`.
