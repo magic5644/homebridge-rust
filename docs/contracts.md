@@ -207,6 +207,8 @@ pub async fn run(config: HomeKitConfig, store: Store,
 
 P05 defines `DiscoveredGateway` and `TahomaConfig`: TLS DNS name, port, private expected PIN, optional resolved IP address, `integration_id`; `TahomaConfig` adds `token_file: PathBuf` and `ca_file: PathBuf`. `HomeKitConfig`: name, TCP port, optional network interface, `state_dir: PathBuf`, backend selected at P04. Generate/store pairing PINs in private state, never in example files.
 
+Both HomeKit implementation paths are native Rust: a suitable existing stack (P21) or a project HAP implementation (P22), using established cryptographic libraries. No Node/JavaScript backend is allowed. Their shared `run` interface and all safety/persistence rules remain unchanged.
+
 HomeKit transport uses Store to allocate AID/IID, subscribe to events, and reread a snapshot after lost events. It must not keep only an initial copy that cannot resynchronize.
 
 P14 provides async `run_events(client: TahomaClient, store: Store, cancel: CancellationToken) -> Result<(), BridgeError>`; updates flow through Store, which publishes events after commit. `Store` is clonable and shares the same worker and 256-capacity broadcast. Each consumer calls `subscribe`, then reads a snapshot and reconciles on lag.

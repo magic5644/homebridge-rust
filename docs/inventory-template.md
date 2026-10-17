@@ -57,7 +57,9 @@ Extend to every element; do not collapse different commands into a single “Som
 - Each Switch: momentary trigger or maintained state; manufacturer scenario or direct command; every affected device, especially garage/heating.
 - Schedules/conditions stored in TaHoma remain there until explicit equivalence is established.
 
-## 6. Resource baseline
+## 6. Resource comparison — final validation (P31/P38)
+
+Owner decision: collect comparable legacy and Rust measurements at final validation before removing the legacy installation. This measurement is deferred from P03 and does not block development.
 
 Record date, duration, version, device count, connection state, and active functions. For every required process: RSS, PSS if available, CPU, and child processes; for Docker: current/peak cgroup memory separately. Keep raw data private and publish only a technical summary.
 

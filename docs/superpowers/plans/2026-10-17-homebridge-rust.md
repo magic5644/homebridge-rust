@@ -6,7 +6,7 @@
 
 **Architecture:** Rust core and compiled connectors, static UI, and HomeKit transport validated early. Keep the Homebridge child bridge active for functions not yet replaced. A final Node-free profile requires full inventory coverage.
 
-**Tech Stack:** Stable Rust/2024, Tokio, Axum, serde, reqwest/Rustls, rusqlite, Svelte/TypeScript/Vite, Docker/Compose, QNAP QDK. Rust HAP after proof, HAP-NodeJS as explicit fallback.
+**Tech Stack:** Stable Rust/2024, Tokio, Axum, serde, reqwest/Rustls, rusqlite, Svelte/TypeScript/Vite, Docker/Compose, QNAP QDK. Rust HAP after proof, using a suitable library or a project implementation; no JavaScript/TypeScript server. Browser JavaScript/TypeScript is allowed, built off-NAS and served by Rust.
 
 **Spec:** [Architecture](../../architecture.md), [contracts](../../contracts.md), [Luna guide](../../execution-luna.md), [inventory](../../inventory-template.md).
 
@@ -23,6 +23,8 @@
 - `docs/contracts.md`, including queue sizes/deadlines, applies to every ticket.
 - Preserve each existing use case through a known path until native validation; retaining legacy is not completed replacement.
 - Docker **and** QNAP `.qpkg` delivery required; no compilation/npm on the NAS in native mode.
+- Minimize server memory/CPU: one Rust process, bounded tasks/queues/buffers, event-driven updates; no Node/HAP-NodeJS sidecar. Existing Homebridge is transitional only.
+- Resource comparison is deferred to final validation (P31/P38) by owner decision; no initial measurement gate in P03.
 - Automated tests use fictional data; physical tests are a separate phase with the owner.
 - Prefix local shell commands with `rtk` as required by the environment RTK file; CI uses native tools.
 - Each session handles only the chosen ticket and leaves state in `docs/project-state.md` and a report in `docs/sessions/PXX.md`.
@@ -153,14 +155,14 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 **Dependencies:** P02; read-only access to the installation by an authorized session. **Files:** `docs/compatibility.md`, `docs/performance-baseline.md`, `fixtures/tahoma/*.json`, `tests/fixtures_manifest.json`. Real data: Git-excluded `private/`.
 
-**Status:** partial delivery; the existing Homebridge UI and all 23 accessory dialogs were inspected read-only with owner authorization. Remaining raw capabilities, action effects and resource evidence are missing. [Coverage and missing evidence](../../compatibility.md), [baseline](../../performance-baseline.md), [session report](../../sessions/P03.md). P02 integration and its exact-commit main CI were verified at startup; P03 is not complete.
+**Status:** partial delivery; the existing Homebridge UI and all 23 accessory dialogs were inspected read-only with owner authorization. Remaining raw capabilities and action effects are missing. Resource comparison is deferred to P31/P38 and is not a P03 completion gate. [Coverage and missing evidence](../../compatibility.md), [baseline](../../performance-baseline.md), [session report](../../sessions/P03.md). P02 integration and its exact-commit main CI were verified at startup; P03 is not complete.
 
 **Produces:** anonymized list of 23 visible elements, distinguishing physical devices/actions, used features, and fallback paths.
 
 - [ ] Collect QTS, Container Station, topology/ports, versions, and relevant plugin configuration; never copy secrets or `persist/` into fixtures.
-- [ ] Read TaHoma setup with a locally provided token; collect `controllableName`, commands, states, and models for io/RTS, garage, and heating profiles.
+- [ ] Obtain raw TaHoma setup evidence through an owner-run read-only capture or an authorized existing integration; the owner retains the token. Collect `controllableName`, commands, states, and models for io/RTS, garage, and heating profiles.
 - [ ] Classify nine Switch elements; record effects and Apple Home usage. UI state is not evidence of a physical measurement.
-- [ ] Measure required processes for 30 min after warmup without modifying services; distinguish host memory, RSS/PSS, and cgroup.
+- Deferred by owner on October 17, 2026 to P31/P38: compare legacy and Rust required processes after warmup, distinguishing host memory, RSS/PSS and cgroup. Not measured and not a P03 blocker.
 - [x] Produce minimal contractual fixtures with fictional data and a manifest validating JSON, files, and absence of real identifiers. All ten are authored examples; detailed event payloads remain illustrative pending capture evidence. Offline checks and review do not establish compatibility.
 
 **Verification:** `python3 -m json.tool FILE` for each fixture; review every use case's current path/target. Missing profiles are explicit prerequisites for their tickets, not declared support.
@@ -169,13 +171,13 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 **Dependencies:** P02. **Files:** `experiments/hap-proof/`, `docs/decisions/0001-homekit-backend.md`, `docs/hardware/hap-proof.md`; no committed pairing keys.
 
-**Consumes:** pinned `ewilken/hap-rs` candidate and reference HAP-NodeJS. **Produces:** `native-approved`, `sidecar-required`, or `stop-and-review` decision plus reproducible evidence.
+**Consumes:** pinned Rust HAP candidates and the HAP protocol requirements. **Produces:** `native-approved`, `native-build-required`, or `stop-and-review` decision plus reproducible evidence. No JavaScript backend. Existing Homebridge is only an interoperability reference/transition path.
 
 - [ ] Targeted audit: toolchain compatibility, dependencies, persistence, permissions, test quality, maintenance needs; compile for generic Linux x86_64.
 - [ ] Expose fictional switch/covering; verify discovery, pairing, reads, writes, notifications from a test controller.
 - [ ] Test restart, accessory addition/removal, controller removal, malformed data, clean shutdown; obtain Apple Home evidence on a test bridge.
 - [ ] Measure prototype/document every required fix. No custom cryptography or TLS/auth bypass.
-- [ ] Choose P21 or P22; estimate substantial HAP work separately. At three days, decide from available evidence.
+- [ ] Choose P21 for a validated suitable library or P22 for native Rust HAP implementation. If no library fits, document the required protocol work, evidence, crypto dependencies and bounded implementation/review stages. The three-day budget covers evaluation/planning, not a complete new HAP stack.
 
 **Completion:** human HAP/security review; a compiled example alone does not authorize `native-approved`.
 
@@ -372,18 +374,19 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 **Completion:** traceable HAP version/fixes; no Node dependency in native profile.
 
-### P22 — HAP-NodeJS fallback, only if necessary
+### P22 — Native Rust HAP implementation, if no suitable library exists
 
-**Dependencies:** P04=`sidecar-required`, P20, P18, P19. **Files:** `compat/hap-node/{package.json,package-lock.json,src/index.ts}`, `transport-homekit/src/sidecar.rs`, `sidecar_contract.rs` tests, corresponding Compose profile.
+**Dependencies:** P04=`native-build-required`, P20, P18, P19. **Files:** `transport-homekit/src/{lib,native}.rs`, native HAP modules and protocol/interop tests, `docs/decisions/0001-homekit-backend.md`, `docs/hardware/hap-proof.md`.
 
-**Produces:** same `run` interface, internal JSON-lines v1 protocol over a private Unix socket; no public internal port.
+**Produces:** the same native `transport_homekit::run` interface as P21, implemented in Rust with minimum server memory/CPU overhead. No Node process or JavaScript/TypeScript server.
 
-- [ ] Pin compatible Node/HAP-NodeJS from current docs; no npm plugin installer/loading at runtime.
-- [ ] Bound messages to 256 KiB: `snapshot`, `state_update`, `command_request`, `command_reply`, `health`; same request_id through router; private socket/persistence.
-- [ ] Test sidecar crash/reconnect/resync; unknown in-flight commands, no replay; bounded-backoff supervision and visible state.
-- [ ] Verify same projections as P21, Node tests, `cargo test -p transport-homekit --test sidecar_contract`; measure both processes together.
+- [ ] Turn P04's gap analysis into bounded implementation stages before writing protocol code; retain explicit evidence for what is implemented and what remains unvalidated.
+- [ ] Implement discovery, pairing/verification, encrypted sessions, characteristic permissions, reads/writes/notifications, revocation and persistent identities. Reuse maintained cryptographic libraries for primitives; do not invent cryptography.
+- [ ] Test known protocol vectors, malformed/hostile inputs, counters/session limits, persistence, revocation, disconnect/reconnect and shutdown. Use bounded resources and integrate with the existing Store/router; uncertain physical commands are not replayed.
+- [ ] Validate Apple Home interoperability with fictional accessories and obtain human HAP/security review before production use. Incomplete conformance is not compatibility proof.
+- [ ] Run native transport contract tests and workspace checks; measure the complete Rust process during final validation. Report gaps without introducing a Node fallback.
 
-**Completion:** profile named hybrid; no claim of plugin compatibility through this layer.
+**Completion:** validated native Rust transport, traceable dependencies/protocol evidence, passing interoperability and security review. A protocol implementation is planned here, not claimed as delivered by the P03 documentation update.
 
 ### P23 — Login and TaHoma setup UI
 
@@ -430,7 +433,7 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 ### P27 — Docker image and Compose for QNAP
 
-**Dependencies:** P25, P26, selected backend operational. **Files:** `packaging/docker/Dockerfile`, `compose.yaml`, `compose.hybrid.yaml` if needed, `.dockerignore`, `docs/install/docker-qnap.md`, `tests/packaging/docker-smoke.sh`.
+**Dependencies:** P25, P26, selected backend operational. **Files:** `packaging/docker/Dockerfile`, `compose.yaml`, `.dockerignore`, `docs/install/docker-qnap.md`, `tests/packaging/docker-smoke.sh`.
 
 **Produces:** image without runtime compilation, `/data` volume, configurable user, Linux host networking, internal healthcheck.
 
@@ -473,7 +476,7 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 - [ ] PRs run tests/builds without publication or secrets available to forks; minimal GitHub permissions.
 - [ ] Approved tag publishes immutable GHCR version/digest; actually verify anonymous access, since public repository does not guarantee public GHCR package.
-- [ ] Include dependencies/licenses (Homebridge/HAP-NodeJS Apache-2.0, UI MIT at research time) and redistributed-component obligations; no logo reuse as official branding.
+- [ ] Include the actual Rust/UI dependency licenses and notices for redistributed components; no legacy Homebridge/HAP-NodeJS dependency is implied and no logo reuse as official branding.
 - [ ] Validate workflow with test version; no stable release before P37. Signing credentials remain outside repository.
 
 ### P31 — Comparable measurements and simulated endurance
@@ -483,7 +486,8 @@ Dependencies written in individual tickets take precedence over the simplified g
 **Produces:** reproducible report with versions, hardware, exact scope.
 
 - [ ] 50/100-device scenarios: idle, state burst, 5 clients/1,000 reads, slow client, reconnects, maximum queue sizes.
-- [ ] Report RSS/PSS, separate cgroup metrics, CPU, API/admission p95, startup, memory peak; include required sidecar/legacy.
+- [ ] During final validation, collect comparable legacy and Rust windows after warmup on identical hardware/functions before removing the legacy installation. The initial baseline was explicitly deferred from P03 by the owner; no earlier sample series is assumed.
+- [ ] Report RSS/PSS, separate cgroup metrics, CPU, API/admission p95, startup, memory peak; include retained legacy processes while required.
 - [ ] 72 h endurance: no crash, stable task/file counts, memory plateau/drift <10% per architecture.
 - [ ] Compare targets: 64/128 MiB native RSS, proposed 50% household gain; if missed, profile the measured bottleneck and create a focused fix.
 
@@ -572,8 +576,8 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 - [ ] Verify zero residual dependency on nine Switch elements, two thermostats, garage, coverings, P36 uses; even one legacy row prevents removing its plugin.
 - [ ] Back up/disable legacy paths by group with owner; retain rollback procedure/private archive.
-- [ ] If HAP sidecar remains, open an estimated P04/P21 follow-up; its presence prevents an all-Rust label even with native integrations.
-- [ ] Measure final installation/publish actual gains; remove unused native-profile dependencies without breaking a still-offered hybrid profile.
+- [ ] Verify server and HomeKit transport are Rust-only with no Node/JavaScript/TypeScript server dependency; browser JavaScript/TypeScript is permitted. Native HAP implementation and review must be complete before legacy removal.
+- [ ] Measure final installation against comparable legacy measurements collected during final validation; publish actual gains and remove unused dependencies. No hybrid Node profile is offered.
 - [ ] Stable tag only after covered-scope acceptance; no universal Homebridge-ecosystem compatibility claim.
 
 ## 4. Luna session organization
@@ -595,4 +599,4 @@ An agent must not edit shared contracts/exports/lockfiles concurrently with anot
 
 The documents provide an actionable breakdown. Before integration development, review scope/targets, complete P03 for exact profiles, then decide P04. These checks avoid assigning Luna an integration with unknown API/hardware.
 
-Still needed: QTS/Container Station version, exact garage modes, state/obstruction feedback, models/commands of both heating devices, contents of nine actions, any Matter functions, authenticated TaHoma inventory. Keep this data local; only anonymized technical summaries extend the public plan.
+Still needed: remaining kernel/plugin facts, exact garage modes, state/obstruction feedback, models/commands of both heating devices, contents of nine actions, any Matter functions, authenticated TaHoma inventory. Keep this data local; only anonymized technical summaries extend the public plan.

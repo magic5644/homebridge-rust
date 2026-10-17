@@ -4,7 +4,7 @@
 
 Gradually replace the household Homebridge installation with a product using less memory and CPU, without losing everyday commands or state feedback. The product provides Web administration and a bridge to Apple Home/Siri. Somfy primarily uses the TaHoma gateway already on the network.
 
-The server and business integrations will be written in Rust. The browser UI can remain TypeScript: once compiled, it requires no Node.js process on the NAS. A Rust WebAssembly UI would add work without demonstrating server-memory savings.
+The server, business integrations and HomeKit transport must be Rust, with minimum server memory and CPU overhead. JavaScript/TypeScript is allowed in the browser UI; its build runs off-NAS and Rust serves the compiled assets. No JavaScript/TypeScript server, Node runtime or HAP-NodeJS fallback is part of the replacement product. Prefer one Rust process, bounded tasks/queues/buffers and event-driven updates; avoid extra processes and per-device polling. These are design constraints, not measured performance claims.
 
 This proposal covers design, work breakdown, and preparatory checks. Development, pairing, and device migration follow plan execution after review.
 
@@ -53,12 +53,10 @@ The gradual proposal has two independent axes: replacing integrations and select
 
 ### HomeKit axis
 
-1. Prove a Rust HAP bridge using fictional accessories, then a pilot device.
-2. If the candidate fails within the feasibility budget, temporarily use HAP-NodeJS in a separate process solely to publish Rust-controlled devices.
-3. Keep existing Homebridge for other devices; the temporary HAP process runs no npm plugins.
-4. Return to Rust HAP only after the same contract/hardware tests. This transition may require a new bridge and re-pairing.
-
-The fallback retains a Node.js dependency. Do not present it as an all-Rust edition or as proven memory optimization.
+1. Evaluate existing Rust HAP libraries and prove a bridge with fictional accessories, then a separately authorized pilot device.
+2. If no suitable library is found within P04, plan the missing native transport work and implement HAP in Rust at P22. Reuse established cryptographic libraries rather than inventing cryptographic primitives.
+3. Both the library-backed and project-implemented paths must satisfy the same pairing, persistence, permissions, notification and interoperability tests and human security review before production use.
+4. Keep the existing Homebridge only for unmigrated functions until native replacements are validated; do not introduce another Node process. A blocked native implementation must be reported honestly, not replaced by a JavaScript backend.
 
 ## 5. Runtime architecture
 
@@ -68,7 +66,7 @@ flowchart LR
     API --> Core["bridge-core: registry, commands, storage"]
     Core --> Tahoma["integration-tahoma: Rust"]
     Tahoma -->|"Local HTTPS"| Box["TaHoma gateway"]
-    Core --> HAP["transport-homekit: validated Rust\nor temporary HAP-NodeJS process"]
+    Core --> HAP["transport-homekit: Rust HAP\nlibrary or native implementation"]
     HAP <-->|"HAP / mDNS"| Apple["Apple Home / hub"]
     Core --> DB[("SQLite + secrets on local volume")]
     Legacy["Existing Homebridge: remaining plugins"] <-->|"HAP and possibly Matter"| Apple
@@ -94,7 +92,7 @@ Pin exact Rust/dependency versions at P02 in `Cargo.lock` and `rust-toolchain.to
 | Data | SQLite through rusqlite, bundled SQLite | Transactions/consistent backups; no external SQL service |
 | UI | Svelte 5 + TypeScript + Vite | Embedded static build; Node only for compilation |
 | Styles | Simple CSS, accessible local components | No UI library for a few screens |
-| HomeKit | Rust candidate evaluated at P04; HAP-NodeJS fallback | Do not reimplement HAP cryptography |
+| HomeKit | Rust library evaluated at P04, or native Rust implementation at P22 | Reuse proven crypto primitives; validate the HAP protocol/security/interoperability |
 | Logs | tracing, JSON or text | Bounded/redacted logs; host-service rotation |
 | CLI | clap in server binary | `serve`, `check`, `healthcheck`, `backup`, `restore`, `inventory` |
 | Web auth | argon2 + opaque sessions | One initial local admin; no mandatory cloud identity |
@@ -113,7 +111,6 @@ crates/integration-tahoma/src/    # discovery, manufacturer DTOs, HTTP, events, 
 crates/transport-homekit/src/     # HomeKit projection and selected backend
 crates/bridge-server/src/         # binary, orchestration, auth, API, UI files
 web/src/                         # compiled UI
-compat/hap-node/                 # created only if fallback is selected
 fixtures/                        # fictional data and reproducible scenarios
 tests/                           # contracts, system, performance
 packaging/                       # Docker, Compose, native archive, selected NAS package
@@ -169,9 +166,9 @@ Do not build a cloud fallback connector before finding an actual uncovered inven
 
 ## 8. HomeKit bridge
 
-HAP validation covers discovery, pairing, session verification, reads/writes, notifications, permissions, controller removal, restart persistence, and size limits. Cryptography/counters remain provided by a proven stack.
+HAP validation covers discovery, pairing, session verification, reads/writes, notifications, permissions, controller removal, restart persistence, and size limits. Cryptographic primitives come from proven libraries; protocol counters and session handling require explicit tests/security review for either Rust implementation path.
 
-P04 has a maximum three-engineering-day budget to decide whether to retain the Rust candidate. Compiling an example is insufficient. Outcomes are `native-approved`, `sidecar-required`, or `stop-and-review` if no safe transport is available within budget. Pin any fork to a commit and maintain it explicitly instead of hiding it as a stable dependency.
+P04 has a maximum three-engineering-day budget to decide whether to retain the Rust candidate. Compiling an example is insufficient. Outcomes are `native-approved` for a suitable existing Rust stack, `native-build-required` when project implementation is needed, or `stop-and-review` when essential evidence/access is missing. The three-day budget covers evaluation and a scoped native implementation plan, not delivery of a complete HAP stack. P22 implements missing HAP functionality in Rust; JavaScript fallback is excluded. Pin any fork to a commit and maintain it explicitly instead of hiding it as a stable dependency.
 
 Rust and Homebridge use distinct identities, directories, and ports. Allocate/persist AID/IID transactionally; renaming does not change them. Start with a conservative maximum of 149 accessories behind one bridge; beyond this, create persistent bridge groups before migrating those accessories. Homebridge child bridges remain available for coexistence. [Child Bridges](https://github.com/homebridge/homebridge/wiki/Child-Bridges).
 
@@ -220,7 +217,7 @@ On Linux NAS, `network_mode: host` enables required local traffic without multic
 
 Proposed initial ports: UI `8582/TCP`, HAP `51827/TCP`, mDNS `5353/UDP` shared with system mechanisms; TaHoma uses an outbound connection. Record actual Homebridge/child-bridge ports before installation. Do not stop Avahi or another service to free 5353.
 
-A local healthcheck distinguishes a live process from degraded integrations: an offline gateway must not cause a container restart loop. HAP-NodeJS fallback uses a separate Compose profile and reports its own consumption.
+A local healthcheck distinguishes a live process from degraded integrations: an offline gateway must not cause a container restart loop. The replacement has a single native Rust HomeKit path; no Node sidecar or hybrid Compose profile is planned.
 
 ### Direct installation
 
@@ -230,11 +227,13 @@ The identified NAS requires **QNAP `.qpkg` x86_64**, built with QDK and tested o
 
 Use a generic x86_64 CPU target, not build-machine `target-cpu=native`. Validate cryptographic providers/CPU instructions on the Celeron J1900. Build off-NAS to avoid consuming its 2 GB. UI-reported available memory describes host/container according to the tool, not Homebridge RSS; it does not replace per-process baselines. [QNAP specifications](https://www.qnap.com/en/product/ts-251%2B/specs/hardware).
 
-Installation requires no Rust, npm, or NAS compilation. Node fallback supplies its runtime separately and documents the difference. Add 32-bit ARM only if the NAS requires it; lack of support may require hardware replacement.
+Installation requires no Rust, Node, npm, or NAS compilation. Browser assets are built off-NAS and served by the Rust binary. Add 32-bit ARM only if the NAS requires it; lack of support may require hardware replacement.
 
 ## 12. Measurements and acceptance criteria
 
-The following are **proposed targets for decision after baseline**, not results. Compare identical hardware, device counts, functions, and scenarios. Identify errors before comparing speed: removing expensive devices from the test is not a product gain.
+Owner decision, October 17, 2026: defer the legacy-versus-Rust resource comparison to final validation at P31/P38. A 30-minute initial baseline is not required to complete P03 or start development; preserve the current installation for a later comparable measurement before removing it.
+
+Minimum server memory and CPU overhead is a design priority. The following are **proposed targets for final verification**, not results. Compare identical hardware, device counts, functions, and scenarios. Identify errors before comparing speed: removing expensive devices from the test is not a product gain.
 
 | Measurement | Initial native target | Method |
 |---|---|---|
@@ -248,7 +247,7 @@ The following are **proposed targets for decision after baseline**, not results.
 | Endurance | 72 h without crash; memory plateau | Compare first/last 24 h medians after warmup; drift < 10% |
 | Robustness | Recovery after network loss/gateway reboot | No double-send or identifier loss |
 
-For Docker, also report cgroup `memory.current`/peak including cache separately from RSS/PSS; these metrics are not directly comparable. Include every sidecar and retained Homebridge. The hybrid profile may initially consume more; decide from measurements rather than language choice.
+For Docker, also report cgroup `memory.current`/peak including cache separately from RSS/PSS; these metrics are not directly comparable. Include retained Homebridge whenever it remains necessary during migration. The final replacement is Rust-only on the server; temporary legacy consumption must remain visible in comparisons.
 
 Measure movement delays, radio stability, and RTS physical limits separately. Target 100% retention of inventoried use cases, not a claim of 100% native device coverage in the first version.
 
@@ -288,7 +287,7 @@ Engineering estimates to recalibrate after inventory/P04. Luna accelerates bound
 
 | Milestone | Verifiable output | Indicative effort |
 |---|---|---|
-| M0 — inventory/decisions | Hardware, baseline, coverage, HAP decision | 3–5 days |
+| M0 — inventory/decisions | Hardware, coverage, HAP decision; resource comparison deferred to final validation | 3–5 days |
 | M1 — usable baseline | Authenticated API, storage, simulator | 4–7 days |
 | M2 — local Somfy | Tested inventory/events/commands | 5–8 days |
 | M3 — HomeKit/UI | End-to-end test control | 5–10 days |

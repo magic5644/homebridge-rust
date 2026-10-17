@@ -22,7 +22,8 @@ The owner's explicit session instructions take precedence over repository conven
 - Public repository: `https://github.com/magic5644/homebridge-rust`, owner `magic5644`, reference branch `main`.
 - Target: QNAP TS-251+, Celeron J1900, 2 GB; TaHoma V2; io-homecontrol and RTS coverings, garage, two thermostats, and nine actions to qualify.
 - Four planned Rust packages: `bridge-core`, `integration-tahoma`, `transport-homekit`, `bridge-server`. Static Svelte/TypeScript UI at P17.
-- Docker amd64 and QNAP `.qpkg` distribution; no compilation on the NAS. Native HAP transport remains conditional on P04.
+- Docker amd64 and QNAP `.qpkg` distribution; no compilation on the NAS. HomeKit transport must be Rust: evaluate libraries at P04, or implement native HAP at P22 if needed. No JavaScript/TypeScript server or HAP-NodeJS fallback. Browser JavaScript/TypeScript is allowed; build it off-NAS and serve it with Rust. Minimize server memory/CPU with one process and bounded resources.
+- Owner decision: defer legacy-versus-Rust resource measurements to final validation (P31/P38); they do not block P03. Do not report unmeasured gains.
 - Compatibility is proven per device and use case. Keep Homebridge for functions not replaced; retaining it does not constitute a delivered Rust integration.
 - Durable memory belongs in these versioned files, not only in chat or personal agent memory. Verify actual implementation state in Git and CI.
 
