@@ -82,3 +82,17 @@ class Capture(unittest.TestCase):
              patch("sys.stderr", new_callable=io.StringIO) as error:
             self.assertEqual(self.capture.main(), 1)
         self.assertIn("Terminal", error.getvalue())
+
+    def test_rtk_stderr_pipe_does_not_block_hidden_terminal_input(self):
+        class PublicTransport:
+            def open(self, *args, **kwargs):
+                return io.BytesIO(b"unused-public-ca")
+
+        import ssl
+        with patch.object(self.capture.sys.stdin, "isatty", return_value=True), \
+             patch.object(self.capture.urllib.request, "build_opener", return_value=PublicTransport()), \
+             patch.object(self.capture.ssl, "create_default_context", return_value=ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)), \
+             patch.object(self.capture.getpass, "getpass", side_effect=KeyboardInterrupt), \
+             patch("sys.stderr", new_callable=io.StringIO) as error:
+            self.assertEqual(self.capture.main(), 1)
+        self.assertIn("Capture canceled", error.getvalue())
