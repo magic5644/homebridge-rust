@@ -1,6 +1,6 @@
 # Homebridge Rust — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use `subagent-driven-development` or `executing-plans` to implement this plan task-by-task. Steps use checkbox syntax for tracking. Le mode retenu par le propriétaire est un découpage exécutable par agents Luna ; ce document ne lance aucun agent ni développement.
+> **For agentic workers:** Use `executing-plans` for inline execution of the selected ticket. Steps use checkbox syntax for tracking. Le propriétaire demande **un ticket par session**, modèle choisi par lui, avec mémoire versionnée et PR. Ne pas déléguer ni enchaîner les tickets automatiquement. Lire `AGENTS.md` et `docs/project-state.md` au début.
 
 **Goal:** Remplacer progressivement l'installation du QNAP TS-251+ par un pont Rust administrable sur le Web, avec volets io/RTS, garage, chauffage et actions existantes conservés.
 
@@ -24,7 +24,8 @@
 - Conserver tout usage existant via un chemin connu jusqu'à sa validation native ; ne pas confondre maintien legacy et remplacement terminé.
 - Livraison Docker **et** `.qpkg` QNAP requises ; pas de compilation ni npm sur le NAS en profil natif.
 - Tests automatiques sur données fictives ; les essais physiques constituent une phase distincte avec le propriétaire.
-- Préfixer les commandes shell par `rtk` sur le poste courant, conformément à `/Users/gildaslebournault/.codex/RTK.md`.
+- Préfixer les commandes shell par `rtk` sur le poste courant, conformément au fichier RTK de l'environnement ; la CI utilise les outils natifs.
+- Une session traite uniquement le ticket choisi et laisse son état dans `docs/project-state.md` et son rapport dans `docs/sessions/PXX.md`.
 
 ## Review Focus
 
@@ -119,7 +120,7 @@ Les dépendances écrites dans chaque ticket priment sur le schéma simplifié. 
 
 **Dépendances :** aucune. **Livrable :** `magic5644/homebridge-rust`, public conformément au choix du propriétaire, avec ce dossier uniquement.
 
-**État : réalisé le 17 octobre 2026 pendant la préparation du dossier.** [Dépôt vérifié](https://github.com/magic5644/homebridge-rust). Les tâches de développement P02 et suivantes ne sont pas commencées.
+**État : réalisé le 17 octobre 2026 pendant la préparation du dossier.** [Dépôt vérifié](https://github.com/magic5644/homebridge-rust). Pour l'état des tickets de développement, consulter [la mémoire courante](../../project-state.md).
 
 **Fichiers :** `README.md`, `.gitignore`, `docs/**`. **Interfaces :** aucune API produit.
 
@@ -132,15 +133,16 @@ Les dépendances écrites dans chaque ticket priment sur le schéma simplifié. 
 
 ### P02 — Workspace compilable et socle de validation
 
-**Dépendances :** P01, revue de l'architecture avant développement. **Fichiers :** `Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml`, `crates/*/Cargo.toml`, `crates/*/src/lib.rs`, `crates/bridge-server/src/main.rs`, `docs/dependencies.md`, `.github/workflows/check.yml`.
+**Dépendances :** P01 ; le lancement explicite de P02 avec le prompt de session autorise son socle minimal dans l'architecture proposée. **Fichiers :** `Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml`, `crates/*/Cargo.toml`, `crates/*/src/lib.rs`, `crates/bridge-server/src/main.rs`, `crates/bridge-server/tests/cli_version.rs`, `docs/dependencies.md`, `scripts/check.sh`, `.github/workflows/check.yml`, `docs/sessions/P02.md` et mémoire courante.
 
 **Produit :** quatre packages définis plus haut ; `bridge-server --version` et `bridge-server check --config PATH`.
 
 - [ ] Figer versions Rust et dépendances après consultation Context7 des bibliothèques concernées ; documenter licences et versions sans prétendre qu'une famille vaut la version exacte.
 - [ ] Créer les quatre packages avec le minimum de dépendances ; ne pas ajouter de framework de plugins.
 - [ ] Ajouter `cli_version` : sortie contient version du package, code 0 ; config absente → erreur lisible, code non nul, aucun fichier écrasé.
-- [ ] Vérifier `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace --locked`, `cargo build -p bridge-server --release --locked`.
-- [ ] Faire exécuter ces commandes en CI ; choisir la licence du code et conserver les notices des composants repris.
+- [ ] Créer `scripts/check.sh` comme point d'entrée de `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `cargo test --workspace --locked`, `cargo build -p bridge-server --release --locked` ; le script s'arrête au premier échec. Vérifier `sh -n`, son échec sur un contrôle simulé en erreur et l'exécution réelle de ces commandes.
+- [ ] Faire exécuter ce script en CI selon la mémoire GitHub Actions : job stable `Rust checks`, PR/push main, permissions minimales, actions épinglées, timeout et données fictives. Choisir la licence du code et conserver les notices des composants repris.
+- [ ] Pousser une branche et créer une PR, vérifier la CI du dernier commit ; consigner commandes, résultats et limites dans `docs/sessions/P02.md` et `docs/project-state.md`. Aucune fusion ni release automatique.
 
 **Clôture :** build reproductible minimal, CI verte, aucun appel réseau domestique au démarrage des tests.
 
@@ -569,9 +571,9 @@ Les dépendances écrites dans chaque ticket priment sur le schéma simplifié. 
 - [ ] Mesurer l'installation finale et publier les gains réels ; retirer les dépendances non utilisées du profil natif sans casser le profil hybride encore proposé.
 - [ ] Tag stable uniquement après acceptation du périmètre couvert ; ne pas déclarer la compatibilité universelle avec l'écosystème Homebridge.
 
-## 4. Affectation conseillée aux agents Luna
+## 4. Organisation des sessions Luna
 
-Après M0 et gel des contrats, on peut travailler sur trois lignes au maximum, dans des branches distinctes. Il s'agit d'une organisation pour la future exécution, pas d'un lancement effectué pendant la rédaction.
+Par défaut, les sessions sont successives, chacune sur un ticket et une branche. Les domaines ci-dessous servent à retrouver les fichiers concernés ; ils ne déclenchent aucun agent en parallèle. Si le propriétaire demande explicitement des sessions concurrentes, utiliser des espaces isolés et réserver les fichiers partagés.
 
 | Ligne | Tickets successifs | Fichiers principalement possédés |
 |---|---|---|
@@ -582,7 +584,7 @@ Après M0 et gel des contrats, on peut travailler sur trois lignes au maximum, d
 
 P17 attend P09. P18 attend P15/P16. P33–P35 se font successivement si leurs changements touchent le même dispatcher. P21 et P22 sont des alternatives, pas deux implémentations à développer d'emblée.
 
-Un agent ne modifie pas un contrat/export/lockfile partagé en concurrence avec un autre. Il propose le changement au référent, qui réserve les fichiers et met à jour tous les consommateurs. Chaque PR a un test démontrant le comportement et une liste des appareils/capacités qu'elle couvre.
+Un agent ne modifie pas un contrat/export/lockfile partagé en concurrence avec un autre. Il propose le changement au référent, qui réserve les fichiers et met à jour tous les consommateurs. Chaque PR a un test démontrant le comportement et une liste des appareils/capacités qu'elle couvre. Le rapport de session et la mémoire courante permettent au ticket suivant de reprendre sans l'historique du chat.
 
 ## 5. Conditions de lancement et décisions restantes
 

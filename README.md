@@ -13,6 +13,12 @@ Proposition du 17 octobre 2026 pour `magic5644` : un pont domotique économe en 
 5. [Inventaire à compléter](docs/inventory-template.md) : matériel, plugins, capacités et couverture de chaque équipement.
 6. [Recherche et vérifications](docs/research.md) : sources, documentation Context7 et observations locales sans identifiants de la maison.
 
+## Une session par ticket
+
+Commencer par [l'état courant](docs/project-state.md), puis utiliser le [prompt de démarrage](docs/prompts/start-ticket.md) avec **P02**, premier ticket de développement. Les [instructions agents](AGENTS.md) et la [mémoire GitHub Actions](.github/instructions/github-actions-memory.instructions.md) sont versionnées pour les sessions suivantes.
+
+La session implémente son ticket, teste, prépare une PR et laisse un rapport ; elle ne démarre pas automatiquement le suivant. Le harnais exécutable (workspace et CI) reste à construire au P02.
+
 ## Orientation recommandée
 
 Construire le serveur et les intégrations en Rust. Tester très tôt la viabilité de HomeKit natif avant de le choisir définitivement. Garder Homebridge pour les équipements qui dépendent encore de ses plugins ; prévoir un petit transport HAP-NodeJS temporaire si la pile HAP Rust ne passe pas les tests.

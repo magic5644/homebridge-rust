@@ -6,11 +6,11 @@ Implémenter une tâche bornée du [plan](superpowers/plans/2026-10-17-homebridg
 
 Luna convient aux mappings à partir de fixtures, aux routes API déjà spécifiées, aux écrans, aux tests et au packaging isolé. Les décisions HAP, la cryptographie, les essais physiques du garage et la migration de production nécessitent une revue humaine compétente. L'agent ne choisit pas seul de retirer une protection pour faire passer un test.
 
-## 2. Paquet de contexte à fournir par tâche
+## 2. Contexte à retrouver pour chaque ticket
 
-Ne pas copier toute l'historique du chat. Fournir :
+Ne pas copier tout l'historique du chat. L'agent retrouve dans le dépôt :
 
-1. L'ID du ticket, son texte intégral et le commit de départ.
+1. L'ID du ticket et son texte intégral dans le plan ; le commit de départ se vérifie dans Git.
 2. `docs/architecture.md`, `docs/contracts.md`, ce guide et la section utile de l'inventaire anonymisé.
 3. Les fichiers possédés par la tâche et les exports des dépendances déjà fusionnées.
 4. Les fixtures et les tests du composant, plus les consommateurs de l'interface modifiée.
@@ -20,32 +20,13 @@ Les tâches se lancent depuis la racine du dépôt. Vérifier les instructions `
 
 Pour toute question de bibliothèque/API/CLI : commencer par Context7 `resolve-library-id`, choisir la documentation officielle pertinente, puis `query-docs` avec la question complète. En absence de résultat, utiliser les sources officielles et signaler la limite. Ne jamais inclure les identifiants domestiques dans une requête externe.
 
-## 3. Modèle de mission à copier
+## 3. Prompt et règle de session
 
-```text
-Tu implémentes uniquement le ticket <ID> du plan
-docs/superpowers/plans/2026-10-17-homebridge-rust.md.
-Point de départ : <commit>. Branche : feat/<id>-<sujet>.
-Lis docs/architecture.md, docs/contracts.md, docs/execution-luna.md,
-le ticket et les fichiers/consommateurs qu'il cite.
+Le [prompt de démarrage](prompts/start-ticket.md) est la source unique à copier. Remplacer uniquement `PXX` par l'ID choisi ; commencer par P02. L'agent déduit les fichiers, dépendances et fixtures depuis le ticket et vérifie ce qui existe réellement.
 
-Fichiers possédés : <liste exacte>.
-Dépendances déjà disponibles : <tickets et exports>.
-Fixtures autorisées : <liste>.
-Ne commande aucun appareil réel et ne lis aucune donnée privée.
+Le propriétaire demande **un ticket par session**. La session travaille en autonomie sur ce ticket, crée ou actualise sa PR et vérifie la CI, puis s'arrête. Pas de passage automatique au ticket suivant, de délégation ou de création de chat supplémentaire sans demande explicite.
 
-Avant code, vérifie que les prérequis du ticket sont vrais.
-Écris le test ciblé et constate son échec, puis la plus petite
-implémentation complète. Ne change pas un contrat partagé en silence.
-Exécute les vérifications du ticket et les tests des appelants affectés.
-Mets à jour fixtures/documentation nécessaires, sans élargir le scope.
-Prépare un commit limité à ces fichiers et un compte rendu vérifiable.
-
-Si une dépendance/fixture manque, décris exactement ce qui manque.
-Continue ce qui est indépendant ; ne simule pas une réussite matérielle.
-```
-
-Le référent renseigne les champs avant dispatch ; une mission contenant `<ID>` ou `<liste>` n'est pas prête. Le nom de modèle Luna est sélectionné parmi les modèles effectivement disponibles dans l'environnement, sans copier une ancienne référence de modèle.
+Lire [AGENTS.md](../AGENTS.md), [l'état courant](project-state.md) et les [instructions GitHub Actions](../.github/instructions/github-actions-memory.instructions.md). Le modèle Luna est choisi parmi ceux effectivement disponibles dans l'environnement par le propriétaire, sans référence de modèle ancienne imposée par le dépôt.
 
 ## 4. Autonomie et limites concrètes
 
@@ -91,6 +72,8 @@ Pas de génération de « support universel » par familles de noms de produits.
 - Revue terminée avant fusion, avec attention spécifique aux hypothèses matérielles.
 
 ## 7. Compte rendu attendu
+
+Le rapport est enregistré dans `docs/sessions/PXX.md` et résumé dans `docs/project-state.md`. Il fait partie de la PR du ticket. Une PR prête reste `ready_for_review` jusqu'à intégration vérifiée ; elle n'est pas assimilée à un ticket terminé sur `main`.
 
 ```text
 Ticket : Pxx
