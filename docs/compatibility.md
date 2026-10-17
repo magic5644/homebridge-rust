@@ -1,46 +1,48 @@
 # P03 — Inventory and compatibility evidence
 
-Date: October 17, 2026. Status: **blocked on installation access**; fictional fixtures are available for review. No native compatibility has been demonstrated.
+Date: October 17, 2026. Status: **partial inventory observed; blocked on remaining evidence**; fictional fixtures are available for review. No native compatibility has been demonstrated.
 
 ## Evidence and access boundary
 
-The [earlier read-only UI inventory](inventory-template.md) reported 23 visible elements and Homebridge 2.4.0, UI 5.29.0, Node 24.21.0, and homebridge-tahoma 2.2.64 in a child bridge. These are historical observations, not fresh authenticated setup evidence. The owner reported io and RTS coverings; the split remains unknown.
+The owner explicitly authorized using the existing Homebridge application instead of supplying a TaHoma token. On October 17, 2026, the authenticated UI, all 23 accessory information dialogs, status page, and plugin page were inspected read-only. No token, raw JSON configuration, logs, credential store, private backup, or pairing screen was opened. Only information dialogs were opened/closed; no accessory value, UI setting, cache, service or plugin was changed.
 
-This session received no TaHoma endpoint/token file, NAS access method, private captures, or connected inventory browser session. The repository has no `private/` directory and no explicitly named TaHoma/QNAP/Homebridge access environment variables. No credential stores, private backups, or unrelated configuration were searched. No installation requests, event listeners, device commands, pairing, service changes, or plugin changes were made.
+Current UI observations confirm Homebridge 2.4.0, UI 5.29.0, Node 24.21.0, homebridge-tahoma 2.2.64 in a child bridge, Ubuntu Jammy 22.04.5, x64, Docker enabled, and container user `root`. These are values reported by Homebridge, not a host/QTS audit. All 23 accessory dialogs identify `homebridge-tahoma` as their plugin.
 
-QTS/Container Station versions, image/digest, topology, ports, volumes, network/resource settings, redacted plugin options, controller versions, Apple Home automations, and actual Matter usage remain uncollected. A named read-only session or locally supplied capture/access path is needed; secrets must stay outside Git and documentation queries.
+The owner reported both io and RTS coverings. All eleven covering dialogs display an `io` prefix in the plugin-provided serial field, as do the heating and garage dialogs. This is evidence about the Homebridge projection only; it does not resolve the actual radio split or manufacturer model. Full serials, names, addresses and bridge identities are omitted. No raw TaHoma setup/event evidence was collected.
+
+QTS/Container Station versions, image/digest, topology/ports/volumes, resource settings, redacted plugin options, controller versions, Apple Home automations, and actual Matter usage remain uncollected. Homebridge UI access is now available; missing raw capabilities and process metrics may be supplied as privately collected evidence without handing the agent a token.
 
 ## Coverage of all visible elements
 
-References below are placeholders for the historical counts, not household names, manufacturer IDs, or stable mappings to individual devices. Every row remains **legacy / unvalidated**. The existing Homebridge child bridge is the current fallback; its continued operation was not retested. Features shown by the UI are not physical validation.
+References below follow the order within each family in the observed UI. They are anonymous observation references, not manufacturer IDs or durable device mappings. Every row remains **legacy / physically unvalidated**. The existing Homebridge child bridge is the current fallback; actual operation was not tested. The displayed models and characteristics describe the plugin's HAP projection, not verified physical hardware or commands used by the household.
 
-| Reference | Observed UI family | Physical device or action | Used commands/states and dependencies | Current path | Target and qualification |
+| Reference | Observed UI family | Plugin-reported model | Displayed characteristics; use/dependencies | Current path | Target and qualification |
 |---|---|---|---|---|---|
-| covering-01 | Covering | Unqualified | Not collected | Homebridge child bridge | P12/P13: qualify model, io/RTS, position/tilt and calibration; retain legacy until validation |
-| covering-02 | Covering | Unqualified | Not collected | Homebridge child bridge | P12/P13: qualify model, io/RTS, position/tilt and calibration; retain legacy until validation |
-| covering-03 | Covering | Unqualified | Not collected | Homebridge child bridge | P12/P13: qualify model, io/RTS, position/tilt and calibration; retain legacy until validation |
-| covering-04 | Covering | Unqualified | Not collected | Homebridge child bridge | P12/P13: qualify model, io/RTS, position/tilt and calibration; retain legacy until validation |
-| covering-05 | Covering | Unqualified | Not collected | Homebridge child bridge | P12/P13: qualify model, io/RTS, position/tilt and calibration; retain legacy until validation |
-| covering-06 | Covering | Unqualified | Not collected | Homebridge child bridge | P12/P13: qualify model, io/RTS, position/tilt and calibration; retain legacy until validation |
-| covering-07 | Covering | Unqualified | Not collected | Homebridge child bridge | P12/P13: qualify model, io/RTS, position/tilt and calibration; retain legacy until validation |
-| covering-08 | Covering | Unqualified | Not collected | Homebridge child bridge | P12/P13: qualify model, io/RTS, position/tilt and calibration; retain legacy until validation |
-| covering-09 | Covering | Unqualified | Not collected | Homebridge child bridge | P12/P13: qualify model, io/RTS, position/tilt and calibration; retain legacy until validation |
-| covering-10 | Covering | Unqualified | Not collected | Homebridge child bridge | P12/P13: qualify model, io/RTS, position/tilt and calibration; retain legacy until validation |
-| covering-11 | Covering | Unqualified | Not collected | Homebridge child bridge | P12/P13: qualify model, io/RTS, position/tilt and calibration; retain legacy until validation |
-| heating-01 | Thermostat | Unqualified | Not collected | Homebridge child bridge | P34: qualify sensor, units, setpoint, modes and pilot-wire behavior; retain legacy until validation |
-| heating-02 | Thermostat | Unqualified | Not collected | Homebridge child bridge | P34: qualify sensor, units, setpoint, modes and pilot-wire behavior; retain legacy until validation |
-| garage-01 | Garage Door Opener | Unqualified | Not collected | Homebridge child bridge | P33: qualify pulse/separate commands, feedback and obstruction; retain legacy until validation |
-| action-01 | Switch | Unqualified | Not collected | Homebridge child bridge | P35: classify scenario/group/device, effects and Apple Home usage; retain legacy until validation |
-| action-02 | Switch | Unqualified | Not collected | Homebridge child bridge | P35: classify scenario/group/device, effects and Apple Home usage; retain legacy until validation |
-| action-03 | Switch | Unqualified | Not collected | Homebridge child bridge | P35: classify scenario/group/device, effects and Apple Home usage; retain legacy until validation |
-| action-04 | Switch | Unqualified | Not collected | Homebridge child bridge | P35: classify scenario/group/device, effects and Apple Home usage; retain legacy until validation |
-| action-05 | Switch | Unqualified | Not collected | Homebridge child bridge | P35: classify scenario/group/device, effects and Apple Home usage; retain legacy until validation |
-| action-06 | Switch | Unqualified | Not collected | Homebridge child bridge | P35: classify scenario/group/device, effects and Apple Home usage; retain legacy until validation |
-| action-07 | Switch | Unqualified | Not collected | Homebridge child bridge | P35: classify scenario/group/device, effects and Apple Home usage; retain legacy until validation |
-| action-08 | Switch | Unqualified | Not collected | Homebridge child bridge | P35: classify scenario/group/device, effects and Apple Home usage; retain legacy until validation |
-| action-09 | Switch | Unqualified | Not collected | Homebridge child bridge | P35: classify scenario/group/device, effects and Apple Home usage; retain legacy until validation |
+| covering-01 | Window Covering | Somfy `RollerShutter` | Current/target position, position state, obstruction; actual feedback and use unqualified | Homebridge child bridge | P12/P13: qualify physical model, io/RTS, tilt and calibration; retain legacy until validation |
+| covering-02 | Window Covering | Somfy `RollerShutter` | Current/target position, position state, obstruction; actual feedback and use unqualified | Homebridge child bridge | P12/P13: qualify physical model, io/RTS, tilt and calibration; retain legacy until validation |
+| covering-03 | Window Covering | Somfy `RollerShutter` | Current/target position, position state, obstruction; actual feedback and use unqualified | Homebridge child bridge | P12/P13: qualify physical model, io/RTS, tilt and calibration; retain legacy until validation |
+| covering-04 | Window Covering | Somfy `RollerShutter` | Current/target position, position state, obstruction; actual feedback and use unqualified | Homebridge child bridge | P12/P13: qualify physical model, io/RTS, tilt and calibration; retain legacy until validation |
+| covering-05 | Window Covering | Somfy `RollerShutter` | Current/target position, position state, obstruction; actual feedback and use unqualified | Homebridge child bridge | P12/P13: qualify physical model, io/RTS, tilt and calibration; retain legacy until validation |
+| covering-06 | Window Covering | Somfy `RollerShutter` | Current/target position, position state, obstruction; actual feedback and use unqualified | Homebridge child bridge | P12/P13: qualify physical model, io/RTS, tilt and calibration; retain legacy until validation |
+| covering-07 | Window Covering | Somfy `RollerShutter` | Current/target position, position state, obstruction; actual feedback and use unqualified | Homebridge child bridge | P12/P13: qualify physical model, io/RTS, tilt and calibration; retain legacy until validation |
+| covering-08 | Window Covering | Somfy `RollerShutter` | Current/target position, position state, obstruction; actual feedback and use unqualified | Homebridge child bridge | P12/P13: qualify physical model, io/RTS, tilt and calibration; retain legacy until validation |
+| covering-09 | Window Covering | Somfy `RollerShutter` | Current/target position, position state, obstruction; actual feedback and use unqualified | Homebridge child bridge | P12/P13: qualify physical model, io/RTS, tilt and calibration; retain legacy until validation |
+| covering-10 | Window Covering | Somfy `RollerShutter` | Current/target position, position state, obstruction; actual feedback and use unqualified | Homebridge child bridge | P12/P13: qualify physical model, io/RTS, tilt and calibration; retain legacy until validation |
+| covering-11 | Window Covering | Somfy `RollerShutter` | Current/target position, position state, obstruction; actual feedback and use unqualified | Homebridge child bridge | P12/P13: qualify physical model, io/RTS, tilt and calibration; retain legacy until validation |
+| heating-01 | Thermostat | Somfy `HeatingSystem` | Current/target heating-cooling state, current/target temperature, Celsius; actual sensor/modes unqualified | Homebridge child bridge | P34: qualify physical model, sensor, setpoint and pilot-wire behavior; retain legacy until validation |
+| heating-02 | Thermostat | Somfy `HeatingSystem` | Current/target heating-cooling state, current/target temperature, Celsius; actual sensor/modes unqualified | Homebridge child bridge | P34: qualify physical model, sensor, setpoint and pilot-wire behavior; retain legacy until validation |
+| garage-01 | Garage Door Opener | Somfy `GarageDoor` | Current/target door state and obstruction; physical feedback and command type unqualified | Homebridge child bridge | P33: qualify pulse/separate commands, feedback and obstruction; retain legacy until validation |
+| action-01 | Switch | `Default-Manufacturer` / `Default-Model` | Switch projection only; effects, source type and Apple Home use unqualified | Homebridge child bridge | P35: classify scenario/group/device and dependencies; retain legacy until validation |
+| action-02 | Switch | `Default-Manufacturer` / `Default-Model` | Switch projection only; effects, source type and Apple Home use unqualified | Homebridge child bridge | P35: classify scenario/group/device and dependencies; retain legacy until validation |
+| action-03 | Switch | `Default-Manufacturer` / `Default-Model` | Switch projection only; effects, source type and Apple Home use unqualified | Homebridge child bridge | P35: classify scenario/group/device and dependencies; retain legacy until validation |
+| action-04 | Switch | `Default-Manufacturer` / `Default-Model` | Switch projection only; effects, source type and Apple Home use unqualified | Homebridge child bridge | P35: classify scenario/group/device and dependencies; retain legacy until validation |
+| action-05 | Switch | `Default-Manufacturer` / `Default-Model` | Switch projection only; effects, source type and Apple Home use unqualified | Homebridge child bridge | P35: classify scenario/group/device and dependencies; retain legacy until validation |
+| action-06 | Switch | `Default-Manufacturer` / `Default-Model` | Switch projection only; effects, source type and Apple Home use unqualified | Homebridge child bridge | P35: classify scenario/group/device and dependencies; retain legacy until validation |
+| action-07 | Switch | `Default-Manufacturer` / `Default-Model` | Switch projection only; effects, source type and Apple Home use unqualified | Homebridge child bridge | P35: classify scenario/group/device and dependencies; retain legacy until validation |
+| action-08 | Switch | `Default-Manufacturer` / `Default-Model` | Switch projection only; effects, source type and Apple Home use unqualified | Homebridge child bridge | P35: classify scenario/group/device and dependencies; retain legacy until validation |
+| action-09 | Switch | `Default-Manufacturer` / `Default-Model` | Switch projection only; effects, source type and Apple Home use unqualified | Homebridge child bridge | P35: classify scenario/group/device and dependencies; retain legacy until validation |
 
-No row authorizes Rust control or HomeKit publication. An unknown garage state stays unknown; RTS estimates are not measurements. The nine Switch rows cannot yet be classified as physical devices or virtual actions. A fictional binary-switch fixture does not resolve them.
+No row authorizes Rust control or HomeKit publication. An unknown garage state stays unknown; RTS estimates are not measurements. The nine Switch rows cannot yet be classified as physical devices or virtual actions. A fictional binary-switch fixture does not resolve them. Both thermostat projections display 0 °C, which does not establish a real temperature sensor. Door/obstruction and position characteristics do not establish physical feedback merely because the plugin populates them.
 
 ## Fictional fixtures and provenance
 
@@ -67,7 +69,7 @@ Normalized shared position remains closed=0/open=100. The io fixture's raw `core
 
 ## Prerequisites still missing
 
-- P03: authorized read-only installation evidence, authenticated setup, each action's effects/usage, and the [resource baseline](performance-baseline.md).
+- P03: remaining host/container/plugin facts, raw capabilities/setup evidence, each action's effects/usage, and the [resource baseline](performance-baseline.md). Homebridge UI inventory is now observed; no token transfer is required to review privately collected evidence.
 - P11–P14: confirmed raw models, commands, states, bounds/units and detailed event/error shapes before claiming real compatibility. Current fixtures support only synthetic tests.
 - P33/P34/P35: garage safety/feedback, both heating profiles, and all nine action classifications. Hardware validation remains separate and requires specific authorization.
 - P05: P03 is not complete; P04 is independently still required. This partial delivery does not clear either dependency.
