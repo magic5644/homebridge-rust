@@ -123,7 +123,7 @@ One workspace, no core microservices. No dynamic Rust plugin system, C ABI, WASM
 
 ### Connection and inventory
 
-P10/P11 implement discovery, TLS validation, and Bearer authentication. The detected gateway does not need reactivation. Supply the token locally, never in GitHub. Any activation flow follows the current Somfy application. [Somfy guide](https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode).
+P10 implements local discovery. P11 implements the explicit local-token and Somfy-account connection modes described in the [access guide](integrations/tahoma-access.md), with local token recommended. The detected gateway does not need reactivation. Supply the token locally, never in GitHub. Any activation flow follows the current Somfy application. [Somfy guide](https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode).
 
 P12 retrieves device descriptions and declared commands. Recognition combines `controllableName`, command definitions, and available states without assuming two Somfy devices have identical capabilities. Unrecognized devices remain visible with diagnostics and retain legacy support.
 
@@ -162,7 +162,7 @@ Use routes/verbs from the [official local specification](https://github.com/Somf
 
 Normal operation does not depend on cloud access for locally accessible capabilities. Token acquisition or some manufacturer functions may still require Somfy services. Test Internet loss separately from LAN failure.
 
-Do not build a cloud fallback connector before finding an actual uncovered inventory need. If one exists, retain the current plugin, document the limit, and create one ticket per function; do not silently send commands through the cloud.
+The owner explicitly requires both local-token and account/cloud options. Account mode is a selected connection mode, never an automatic fallback. P11 must validate its current authentication/session flow and supported provider endpoints; P23 offers the choice with local token recommended. Do not silently send commands through the cloud or assume identical device/scenario support. Retain the current plugin for uncovered functions.
 
 ## 8. HomeKit bridge
 

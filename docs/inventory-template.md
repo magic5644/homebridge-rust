@@ -6,16 +6,16 @@ Fill in a copy in `private/inventory.md` or another private location. The public
 
 | Item | Known value | To collect |
 |---|---|---|
-| NAS | QNAP TS-251+ | QTS and Container Station versions |
+| NAS | QNAP TS-251+; QTS 5.2.10.3577; Container Station 3.1.2.1742 | Kernel and binary compatibility |
 | CPU/RAM | Intel Celeron J1900, 2 GB reported by the owner | Kernel, instruction set, and host binary compatibility |
-| Current installation | Docker; UI reports Ubuntu 22.04.5, x64 | Image/digest, volumes, ports, network mode, resource limits |
+| Current installation | Docker; UI reports Ubuntu 22.04.5, x64 | Reviewed image/topology/storage/limits in performance-baseline.md |
 | Homebridge | 2.4.0 | Backup and relevant redacted configuration |
 | UI | 5.29.0 | Access/proxy settings without secrets |
 | Node | 24.21.0 | Required processes and each process's PSS/RSS |
-| Plugin | homebridge-tahoma 2.2.64, child bridge | Local/cloud service, profile options, exposed groups |
+| Plugin | homebridge-tahoma 2.2.64 child bridge; Somfy Europe/cloud, scenarios exposed | Raw profile declarations and individual overrides |
 | Gateway | TaHoma V2 | Motor models and exact setup capabilities |
 | Local API | Developer API announced; protocol 2026.4.5-7; TLS and GET apiVersion validated | Authentication/setup with a local token |
-| Controllers | Apple Home/Siri assumed by the Homebridge project | Versions, hub, automations, and actual Matter usage |
+| Controllers | Owner confirms Apple Home/Siri; five scenes/seven automation entries inspected | Versions, hub and actual Matter usage |
 
 ## 2. Visible elements — read-only inspection on October 17, 2026
 
@@ -23,10 +23,10 @@ Household names are omitted. The following numbers are inventory references, not
 
 | Group | Count | Confirmed | Still to qualify | Ticket |
 |---|---:|---|---|---|
-| Coverings | 11 | Present in UI; owner confirms io and RTS | io/RTS split, shutter/blind, commands, position/tilt, calibration | P12/P13 |
-| Thermostats | 2 | Present in UI | Actual measurement, possible pilot-wire heating, setpoints/modes | P34 |
+| Coverings | 11 | Seven positionable/four tilted plugin profiles; owner reports io and RTS | io/RTS split, shutter/blind, commands, position/tilt, calibration | P12/P13 |
+| Thermostats | 2 | AtlanticElectricalHeater profiles in logs | Actual measurement, possible pilot-wire heating, setpoints/modes | P34 |
 | Garage | 1 | Present as Garage Door Opener | Radio, model, pulse/separate commands, state/obstruction | P33 |
-| Switch | 9 | Present as switches | Scenarios, groups, or devices; effects/dependencies | P35 |
+| Switch | 9 | Logs confirm stored scenarios; owner reports covering/radiator uses through Maison/Siri | Exact per-scenario targets, effects/cancellation | P35 |
 | Total | 23 | UI elements, not necessarily 23 physical devices | Other invisible uses and scene dependencies | P36 |
 
 Do not infer a verified physical measurement from a displayed value. No controls were activated during this inventory.
@@ -38,7 +38,7 @@ Do not infer a verified physical measurement from a displayed value. No controls
 | covering-01 | To collect | To collect | Open/close/stop/position as used | Collect from setup, then compare physically | To collect | To collect | legacy | observe then native | unvalidated |
 | heating-01 | To collect | To collect | To collect | Actual temperature or absent | Bounds/modes | To collect | legacy | native after P34 | unvalidated |
 | garage-01 | To collect | To collect | Deterministic or pulse | Position/closed/obstruction, with evidence | Manufacturer procedure | To collect | legacy | P33 validated mode | unvalidated |
-| action-01 | Scenario/group/device to qualify | To collect | Exact effects | Result/partial failure if available | Dependencies | To collect | legacy | P35 | unvalidated |
+| action-01 | Stored manufacturer scenario; exact targets to qualify | To collect | Exact effects | Result/partial failure if available | Dependencies | To collect | legacy | P35 | unvalidated |
 
 Extend to every element; do not collapse different commands into a single “Somfy supported” row.
 

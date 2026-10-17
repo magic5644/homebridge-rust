@@ -112,7 +112,7 @@ Garage: `DoorState` uses `Scalar::Text` with `open`, `closed`, `opening`, `closi
 | `Unavailable` / `unavailable` | 503 | Gateway/device unavailable |
 | `Authentication` / `authentication_required` | 401 | Missing/invalid session |
 | `Forbidden` / `forbidden` | 403 | Invalid CSRF/origin/permission |
-| `UpstreamAuthentication` / `upstream_authentication_failed` | 502 | Manufacturer token rejected; no token in response |
+| `UpstreamAuthentication` / `upstream_authentication_failed` | 502 | Manufacturer credentials/session rejected; no secret in response |
 | `Tls` / `tls_validation_failed` | 502 | Invalid CA or hostname |
 | `Upstream` / `upstream_error` | 502 | Unusable manufacturer response |
 | `Storage` / `storage_error` | 500 | Transaction/storage failure; operation not reported successful |
@@ -181,7 +181,8 @@ pub enum BridgeEvent {
 pub async fn discover(timeout: Duration)
     -> Result<Vec<DiscoveredGateway>, BridgeError>;
 impl TahomaClient {
-    pub fn new(config: TahomaConfig, token: String) -> Result<Self, BridgeError>;
+    pub async fn connect(config: TahomaConfig, credentials: TahomaCredentials)
+        -> Result<Self, BridgeError>;
     pub async fn setup(&self) -> Result<Vec<DiscoveredDevice>, BridgeError>;
     pub async fn register_listener(&self) -> Result<String, BridgeError>;
     pub async fn fetch_events(&self, listener: &str)
@@ -205,7 +206,11 @@ pub async fn run(config: HomeKitConfig, store: Store,
 
 `RawTahomaDevice`, `TahomaEvent`, `TahomaExecution`, and execution DTOs remain connector-private except types explicitly used by public functions. P11 defines their fields from fixtures/OpenAPI; do not generate the entire Somfy API. `TahomaExecution` exposes at least `id: String` and `status: CommandStatus`.
 
-P05 defines `DiscoveredGateway` and `TahomaConfig`: TLS DNS name, port, private expected PIN, optional resolved IP address, `integration_id`; `TahomaConfig` adds `token_file: PathBuf` and `ca_file: PathBuf`. `HomeKitConfig`: name, TCP port, optional network interface, `state_dir: PathBuf`, backend selected at P04. Generate/store pairing PINs in private state, never in example files.
+P05 defines `DiscoveredGateway` (TLS DNS name, port, private expected PIN, optional resolved IP, `integration_id`) and mode-specific `TahomaConfig`: common `integration_id` plus a tagged `local_token` configuration (gateway fields, `token_file: PathBuf`, `ca_file: PathBuf`) or `somfy_account` configuration (supported provider/region, private gateway selection, `credentials_file: PathBuf`). Reject mixed-mode fields and arbitrary account endpoints; local mode is recommended. P07 defines private secret loading. No credentials are serialized in public config.
+
+P11 defines connector-private `TahomaCredentials` variants for a loaded local token or Somfy account credentials/session; it must not derive secret-revealing Debug/serialization. `connect` authenticates the selected mode using bounded requests; a mismatch fails without trying the other mode. Account session renewal must preserve the no-replay command rule. No current runtime caller exists: P05/P07/P11/P23 are the affected future consumers. See the [access guide](integrations/tahoma-access.md) for storage and current-source limits.
+
+`HomeKitConfig`: name, TCP port, optional network interface, `state_dir: PathBuf`, backend selected at P04. Generate/store pairing PINs in private state, never in example files.
 
 Both HomeKit implementation paths are native Rust: a suitable existing stack (P21) or a project HAP implementation (P22), using established cryptographic libraries. No Node/JavaScript backend is allowed. Their shared `run` interface and all safety/persistence rules remain unchanged.
 
@@ -234,8 +239,8 @@ Prefix `/api/v1`. OpenAPI produced at P08 transposes these contracts; it is not 
 | `GET /api/v1/commands/{id}` | Command state, timestamps, public error |
 | `PUT /api/v1/devices/{id}/ownership` | `{ownership, expected_revision}`; observe by default; no remote Homebridge disabling |
 | `GET /api/v1/events` | Session SSE; 15 s heartbeat; resynchronize on every reconnect |
-| `GET /api/v1/integrations/tahoma` | Token-free configuration, connection state, latest redacted error |
-| `PUT /api/v1/integrations/tahoma` | Parameters/write-only token; validation, no secret echo |
+| `GET /api/v1/integrations/tahoma` | Secret-free mode/configuration, connection state, latest redacted error |
+| `PUT /api/v1/integrations/tahoma` | Explicit mode and parameters/write-only token or account credentials; validation, no secret echo |
 | `POST /api/v1/integrations/tahoma/test` | TLS/auth/read test; no commands |
 | `GET /api/v1/homekit` | Backend, status, published devices; no PIN |
 | `GET /api/v1/homekit/pairing` | QR/PIN for administrator session; `Cache-Control: no-store` |
