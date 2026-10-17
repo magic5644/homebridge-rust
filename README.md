@@ -21,6 +21,6 @@ La compatibilité avec toute la maison se vérifie équipement par équipement. 
 
 ## Dépôt et confidentialité
 
-Destination : dépôt **public** `magic5644/homebridge-rust`, selon le choix du propriétaire. La publication initiale contient uniquement les documents. Le compte GitHub disponible a été vérifié.
+Dépôt **public** créé : [magic5644/homebridge-rust](https://github.com/magic5644/homebridge-rust), selon le choix du propriétaire. La publication initiale contient uniquement les documents. Le compte, la visibilité et les fichiers distants ont été vérifiés.
 
 Ne jamais versionner de jetons, de sauvegardes Homebridge réelles, d'identifiants TaHoma, d'adresses des appareils ou de données d'appairage HomeKit. Les exemples et tests utiliseront des valeurs fictives.

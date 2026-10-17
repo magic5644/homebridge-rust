@@ -119,12 +119,14 @@ Les dépendances écrites dans chaque ticket priment sur le schéma simplifié. 
 
 **Dépendances :** aucune. **Livrable :** `magic5644/homebridge-rust`, public conformément au choix du propriétaire, avec ce dossier uniquement.
 
+**État : réalisé le 17 octobre 2026 pendant la préparation du dossier.** [Dépôt vérifié](https://github.com/magic5644/homebridge-rust). Les tâches de développement P02 et suivantes ne sont pas commencées.
+
 **Fichiers :** `README.md`, `.gitignore`, `docs/**`. **Interfaces :** aucune API produit.
 
-- [ ] Vérifier le compte actif avec `gh api user --jq .login` et l'absence de dépôt homonyme ; ne jamais écraser un dépôt existant.
-- [ ] Vérifier les liens relatifs et rechercher les secrets/identifiants réels dans tous les fichiers publiables ; exclure `.graph-it`, données locales et métadonnées privées.
-- [ ] Initialiser `main`, créer le dépôt public, publier un commit `docs: plan Rust home automation bridge` et vérifier propriétaire, visibilité et commit distant.
-- [ ] Garder un statut « conception » dans le README ; aucune application fictivement annoncée installable.
+- [x] Vérifier le compte actif avec `gh api user --jq .login` et l'absence de dépôt homonyme ; ne jamais écraser un dépôt existant.
+- [x] Vérifier les liens relatifs et rechercher les secrets/identifiants réels dans tous les fichiers publiables ; exclure `.graph-it`, données locales et métadonnées privées.
+- [x] Initialiser `main`, créer le dépôt public, publier un commit `docs: plan Rust home automation bridge` et vérifier propriétaire, visibilité et commit distant.
+- [x] Garder un statut « conception » dans le README ; aucune application fictivement annoncée installable.
 
 **Clôture :** URL publique consultable, fichiers attendus présents, aucun code de production, aucune donnée privée publiée.
 
