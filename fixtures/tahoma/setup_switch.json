@@ -1,0 +1,39 @@
+{
+  "gateways": [
+    {
+      "gatewayId": "0000-0000-0000"
+    }
+  ],
+  "devices": [
+    {
+      "deviceURL": "io://0000-0000-0000/3",
+      "label": "Fictional binary switch",
+      "available": true,
+      "controllableName": "io:OnOffIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "off",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "name": "core:OnOffState"
+          }
+        ]
+      },
+      "states": [
+        {
+          "name": "core:OnOffState",
+          "type": 3,
+          "value": "off"
+        }
+      ]
+    }
+  ]
+}

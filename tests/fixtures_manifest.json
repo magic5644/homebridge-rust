@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "source": "https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/blob/main/docs/openapi.yaml",
+  "captured_from_hardware": false,
+  "fixtures": [
+    {
+      "file": "fixtures/tahoma/setup_io.json",
+      "origin": "fictional",
+      "purpose": "Invented io profile; raw closure 25 is not normalized position 25.",
+      "sha256": "826b265a595d62f33fe37e7938ca4eea2d9eeead7c21a730dbd66e8c08878a55"
+    },
+    {
+      "file": "fixtures/tahoma/setup_rts.json",
+      "origin": "fictional",
+      "purpose": "Invented RTS profile without physical position feedback.",
+      "sha256": "548c25720c6a140cf105baf138a81efa0acc9ed6e1657273ad8ab6315eb0d839"
+    },
+    {
+      "file": "fixtures/tahoma/setup_switch.json",
+      "origin": "fictional",
+      "purpose": "Invented binary device, not a classification of the nine observed actions.",
+      "sha256": "7c5d3c586d0b46d1224874eab7a8728ceabfd07568f79427ed0dd31f858e0836"
+    },
+    {
+      "file": "fixtures/tahoma/setup_sensor.json",
+      "origin": "fictional",
+      "purpose": "Invented temperature sensor, not either observed thermostat.",
+      "sha256": "13933c8f0be97f0ad2052c0058131c785490282135a45b31c5bc7c5cad521a68"
+    },
+    {
+      "file": "fixtures/tahoma/setup_unknown.json",
+      "origin": "fictional",
+      "purpose": "Unknown profile must not acquire command capabilities.",
+      "sha256": "937275b9cb48e4e7991b3327dc1a8f80e451f43b73fb9320b70db003c24aa1f7"
+    },
+    {
+      "file": "fixtures/tahoma/events_state.json",
+      "origin": "fictional",
+      "purpose": "Event name is specified; detailed payload is illustrative and needs local capture confirmation.",
+      "sha256": "aed17c616af3b1bf3a8cf4b313578fce4d38a9c318ddbf0f0110410a67194032"
+    },
+    {
+      "file": "fixtures/tahoma/events_execution.json",
+      "origin": "fictional",
+      "purpose": "Event name is specified; detailed payload is illustrative and needs local capture confirmation. Completion does not measure physical state.",
+      "sha256": "c03e1ad78239cfd0409eef57b5b34f5c4dde4c6373e10b5f2e4f31f510f3d098"
+    },
+    {
+      "file": "fixtures/tahoma/events_listener_expired.json",
+      "origin": "fictional",
+      "purpose": "HTTP 400 error envelope is specified; message/code are invented, not a production matching rule.",
+      "sha256": "14368e6e539a41addefed894b2ee15ad95489aeb85a65ac94025183916e265d8"
+    },
+    {
+      "file": "fixtures/tahoma/setup_extra_fields.json",
+      "origin": "fictional",
+      "purpose": "Unknown properties must not create capabilities.",
+      "sha256": "ebda6b5d1e6691bc59685f5ed54c9dc7dd68e43cc4c4ccba90be9fc462ac283c"
+    },
+    {
+      "file": "fixtures/tahoma/setup_invalid.json",
+      "origin": "fictional",
+      "purpose": "Valid JSON with deliberately invalid setup shape; future parser must reject it.",
+      "sha256": "77f659e00b4f07645c757c80c690a74403d1be4d7cadc4ab73cc3137cca9c671"
+    }
+  ]
+}

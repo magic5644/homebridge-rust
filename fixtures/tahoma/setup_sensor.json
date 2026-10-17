@@ -1,0 +1,30 @@
+{
+  "gateways": [
+    {
+      "gatewayId": "0000-0000-0000"
+    }
+  ],
+  "devices": [
+    {
+      "deviceURL": "ogp://0000-0000-0000/4",
+      "label": "Fictional temperature sensor",
+      "available": true,
+      "controllableName": "ogp:TemperatureSensor",
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "name": "core:TemperatureState"
+          }
+        ]
+      },
+      "states": [
+        {
+          "name": "core:TemperatureState",
+          "type": 2,
+          "value": 21.5
+        }
+      ]
+    }
+  ]
+}

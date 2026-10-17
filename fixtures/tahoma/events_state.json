@@ -1,0 +1,13 @@
+[
+  {
+    "name": "DeviceStateChangedEvent",
+    "deviceURL": "io://0000-0000-0000/1",
+    "deviceStates": [
+      {
+        "name": "core:ClosureState",
+        "type": 1,
+        "value": 0
+      }
+    ]
+  }
+]
