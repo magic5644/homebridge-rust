@@ -1,0 +1,47 @@
+{
+  "gateways": [
+    {
+      "gatewayId": "0000-0000-0000"
+    }
+  ],
+  "devices": [
+    {
+      "deviceURL": "io://0000-0000-0000/1",
+      "label": "Fictional io covering",
+      "available": true,
+      "controllableName": "io:RollerShutterGenericIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "name": "core:ClosureState"
+          }
+        ]
+      },
+      "states": [
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 25
+        }
+      ]
+    }
+  ]
+}

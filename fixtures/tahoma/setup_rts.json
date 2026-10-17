@@ -1,0 +1,33 @@
+{
+  "gateways": [
+    {
+      "gatewayId": "0000-0000-0000"
+    }
+  ],
+  "devices": [
+    {
+      "deviceURL": "rts://0000-0000-0000/2",
+      "label": "Fictional RTS covering",
+      "available": true,
+      "controllableName": "rts:RollerShutterRTSComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": []
+      },
+      "states": []
+    }
+  ]
+}

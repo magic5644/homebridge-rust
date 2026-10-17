@@ -153,13 +153,15 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 **Dependencies:** P02; read-only access to the installation by an authorized session. **Files:** `docs/compatibility.md`, `docs/performance-baseline.md`, `fixtures/tahoma/*.json`, `tests/fixtures_manifest.json`. Real data: Git-excluded `private/`.
 
+**Status:** partial delivery; blocked on supplied read-only installation access. [Coverage and missing evidence](../../compatibility.md), [baseline](../../performance-baseline.md), [session report](../../sessions/P03.md). P02 integration and its exact-commit main CI were verified at startup; P03 is not complete.
+
 **Produces:** anonymized list of 23 visible elements, distinguishing physical devices/actions, used features, and fallback paths.
 
 - [ ] Collect QTS, Container Station, topology/ports, versions, and relevant plugin configuration; never copy secrets or `persist/` into fixtures.
 - [ ] Read TaHoma setup with a locally provided token; collect `controllableName`, commands, states, and models for io/RTS, garage, and heating profiles.
 - [ ] Classify nine Switch elements; record effects and Apple Home usage. UI state is not evidence of a physical measurement.
 - [ ] Measure required processes for 30 min after warmup without modifying services; distinguish host memory, RSS/PSS, and cgroup.
-- [ ] Produce minimal contractual fixtures with fictional data and a manifest validating JSON, files, and absence of real identifiers.
+- [x] Produce minimal contractual fixtures with fictional data and a manifest validating JSON, files, and absence of real identifiers. All ten are authored examples; detailed event payloads remain illustrative pending capture evidence. Offline checks and review do not establish compatibility.
 
 **Verification:** `python3 -m json.tool FILE` for each fixture; review every use case's current path/target. Missing profiles are explicit prerequisites for their tickets, not declared support.
 

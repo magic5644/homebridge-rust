@@ -26,7 +26,7 @@ Last updated: October 17, 2026. This file is the session resumption point; code,
 | Sources/research evidence | [Research](research.md) |
 | Versions/licenses | [Dependencies](dependencies.md) |
 | CI/publication rules | [GitHub Actions memory](../.github/instructions/github-actions-memory.instructions.md) |
-| Ticket session result | [P02 report](sessions/P02.md); future `docs/sessions/PXX.md` |
+| Ticket session result | [P02 report](sessions/P02.md), [P03 report](sessions/P03.md); future `docs/sessions/PXX.md` |
 
 Pxx values are Markdown plan IDs, not GitHub issue numbers. Add an issue/PR link only after creating or verifying it.
 
@@ -36,15 +36,17 @@ Pxx values are Markdown plan IDs, not GitHub issue numbers. Add an issue/PR link
 |---|---|
 | P01 — repository/design | `done`; design published on `main`, initial reference `dec76c0` |
 | Instructions/session memory | Versioned; English-language policy and translation included in P02 at owner request |
-| P02 — Rust workspace/CI | `ready_for_review`; [PR #1](https://github.com/magic5644/homebridge-rust/pull/1), branch `feat/p02-workspace-ci`, tested implementation `99e6e43500e791140a233ed6c56a04e8a352b170`; not merged |
-| P03 — detailed inventory | Not started; waits for P02 merge; previous visual inspection exists, authenticated TaHoma inventory still needed |
-| P04 — HAP decision | Not started; waits for P02 merge; no native backend approved |
+| P02 — Rust workspace/CI | `done`; [PR #1](https://github.com/magic5644/homebridge-rust/pull/1) merged; remote `main` `2c0350c73f2411dabbe1a0d195928593ae566791`, exact-commit [CI passed](https://github.com/magic5644/homebridge-rust/actions/runs/39041606358) |
+| P03 — detailed inventory | `blocked` on installation access; branch `feat/p03-inventory-baseline` delivers fictional fixtures, 23 unqualified inventory rows and baseline protocol; see [P03 report](sessions/P03.md). Authenticated inventory, action classification and real measurements remain missing |
+| P04 — HAP decision | Not started; P02 dependency available; no native backend approved |
 | P05 and later | Not started; follow plan dependencies |
-| Application/tests/CI | Minimal CLI and six automated tests delivered in P02 PR; no native compatibility or memory gain demonstrated |
+| Application/tests/CI | P02 minimal CLI and six tests integrated; P03 adds offline fictional-fixture validation. No native compatibility or memory gain demonstrated |
 
-P02 provides four packages (three empty core/integration/transport baselines plus CLI), pinned Rust 1.99.1 and clap 4.6.7/lockfile, MIT license, `scripts/check.sh`, and Linux Actions. `check --config PATH` only verifies UTF-8 readability without writing; schema validation belongs to P07. No device/network implementation exists.
+P02 provides four packages (three empty core/integration/transport baselines plus CLI), pinned Rust 1.99.1 and clap 4.6.7/lockfile, MIT license, `scripts/check.sh`, and Linux Actions. `check --config PATH` only verifies UTF-8 readability without writing; schema validation belongs to P07. No device/network implementation exists. P03 changes no runtime interfaces or dependencies.
 
-Local `sh scripts/check.sh`, shell syntax, and actionlint passed. [Implementation CI](https://github.com/magic5644/homebridge-rust/actions/runs/39028568989) passed `Rust checks` on Ubuntu 24.04 for `99e6e43`. The final documentation commit must also pass; consult [current PR checks](https://github.com/magic5644/homebridge-rust/pull/1/checks), rather than treating the implementation run as proof of a later commit.
+P02 integration was verified at P03 startup: [main CI](https://github.com/magic5644/homebridge-rust/actions/runs/39041606358) passed for `2c0350c73f2411dabbe1a0d195928593ae566791`. P03 validation and PR CI are recorded in [its report](sessions/P03.md); a green fixture check does not complete the missing installation work.
+
+P03 public artifacts: [coverage matrix](compatibility.md), [baseline status/protocol](performance-baseline.md), and [fixture manifest](../tests/fixtures_manifest.json). Ten examples are entirely fictional; detailed event payloads and profile combinations are not gateway-confirmed. Garage/heating/action profiles remain prerequisites, not declared support.
 
 ## GitHub observations
 
@@ -54,7 +56,7 @@ Read-only API observations from October 17, 2026:
 - Issues/Projects enabled; no issue breakdown or board configured by these sessions.
 - Actions enabled; previously returned policy `allowed_actions=all`, `sha_pinning_required=false`. Repository instructions enforce pinning independently and do not change remote policy.
 - No ruleset returned by the earlier API inspection. Classic branch protections were not audited.
-- `.github/workflows/check.yml` now exists in P02 PR: workflow `CI`, stable job `Rust checks`, PR/push main/manual triggers. No workflow exists on `main` until merge.
+- `.github/workflows/check.yml` is integrated on `main`: workflow `CI`, stable job `Rust checks`, PR/push main/manual triggers. P03 adds a Python standard-library fixture check to the same job.
 - Suggested required check after merge: **Rust checks**. No remote protection, permission, or runner setting changed.
 
 Authentication: existing GitHub CLI session works as `magic5644`. A previous system credential-helper push stalled; the per-command GitHub CLI helper allowed synchronization. P02 also used that per-command helper without exposing a token or changing global configuration.
@@ -68,9 +70,10 @@ Authentication: existing GitHub CLI session works as `magic5644`. A previous sys
 
 Internal addresses, PINs, tokens, and household names are excluded from this public memory.
 
-## Next session
+## Resumption point
 
-1. After the owner merges P02, verify its commit and successful CI on `main`, then reconcile P02 from `ready_for_review` to `done`.
-2. Select **P03** (inventory/baseline) or **P04** (HAP feasibility); both become eligible only after verified P02 integration. Neither started in this session.
-3. P03 needs explicitly authorized local read access and a locally supplied token; report missing access without inventing captures/measurements. No physical commands.
-4. Update only the selected ticket's proven results, report, and plan checkboxes. Simulated tests are not hardware proof; a ready PR is not a merge; a written workflow is not a successful run.
+1. Review the P03 partial-delivery PR and [session evidence](sessions/P03.md). P02 is `done`; do not repeat its pending-merge gate.
+2. Resume **P03 only** when the owner supplies a named read-only installation session or private captures, a local token/endpoint path for authenticated setup, action/Apple Home usage evidence, and a complete production resource report or read-only measurement access. No credentials in chat, Git, CI, or documentation queries.
+3. Collect missing QTS/Container Station/topology/plugin facts, qualify all 23 rows and nine Switch effects, and measure the unchanged required process set after warmup for 30 minutes. No physical commands or production changes.
+4. P03 remains incomplete even if this preparatory PR is merged. Do not mark P05's P03 dependency available until the missing evidence is reviewed. P04 is independently eligible but was not started.
+5. Preserve the distinction between fictional tests, historical UI observations, actual hardware evidence, CI success and integration on `main`.

@@ -1,0 +1,20 @@
+{
+  "gateways": [
+    {
+      "gatewayId": "0000-0000-0000"
+    }
+  ],
+  "devices": [
+    {
+      "deviceURL": "io://0000-0000-0000/5",
+      "label": "Fictional unknown device",
+      "available": true,
+      "controllableName": "fictional:UnknownComponent",
+      "definition": {
+        "commands": [],
+        "states": []
+      },
+      "states": []
+    }
+  ]
+}
