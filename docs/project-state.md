@@ -10,6 +10,10 @@ Last updated: October 17, 2026. This file is the session resumption point; code,
 - **All project documentation must be in English**, including instructions, plans, prompts, session reports, comments, and PR descriptions. Existing documents were translated in the P02 PR at the owner's explicit request. The planned French product UI remains a separate requirement.
 - Final deployment: QNAP TS-251+, Celeron J1900, 2 GB; Docker and native QPKG installation.
 - TaHoma V2, io-homecontrol/RTS; known uses include coverings, garage, heating, and virtual actions.
+- Owner update: minimize server memory and CPU; the replacement server, integrations and HomeKit transport must be Rust-only. No JavaScript/TypeScript server, Node runtime or HAP-NodeJS fallback. Prefer one process, bounded work/memory and event-driven updates.
+- Browser JavaScript/TypeScript is allowed; build assets off-NAS and serve them with Rust. A static browser frontend remains acceptable.
+- Evaluate Rust HAP libraries at P04. If none fits, implement native HAP at P22 using established cryptographic libraries; retain interoperability/security validation before production use.
+- Defer the legacy-versus-Rust resource comparison to final validation (P31/P38). The 30-minute initial measurement is not a P03 completion gate or prerequisite for development. Preserve comparable legacy operation until the final comparison.
 - Gradual migration preserving existing operation; no physical control or production changes in a standard coding session.
 
 ## Where to find information
@@ -37,7 +41,7 @@ Pxx values are Markdown plan IDs, not GitHub issue numbers. Add an issue/PR link
 | P01 — repository/design | `done`; design published on `main`, initial reference `dec76c0` |
 | Instructions/session memory | Versioned; English-language policy and translation included in P02 at owner request |
 | P02 — Rust workspace/CI | `done`; [PR #1](https://github.com/magic5644/homebridge-rust/pull/1) merged; remote `main` `2c0350c73f2411dabbe1a0d195928593ae566791`, exact-commit [CI passed](https://github.com/magic5644/homebridge-rust/actions/runs/39041606358) |
-| P03 — detailed inventory | `blocked` on remaining capability/action/resource evidence; [draft PR #2](https://github.com/magic5644/homebridge-rust/pull/2), branch `feat/p03-inventory-baseline`, delivers fictional fixtures, 23 individually inspected Homebridge projections, verified QNAP/container facts and baseline protocol; see [P03 report](sessions/P03.md). Raw TaHoma capabilities, action classification and real measurements remain missing |
+| P03 — detailed inventory | `blocked` on remaining capability/action evidence; [draft PR #2](https://github.com/magic5644/homebridge-rust/pull/2), branch `feat/p03-inventory-baseline`, delivers fictional fixtures, 23 individually inspected Homebridge projections, verified QNAP/container facts and baseline protocol; see [P03 report](sessions/P03.md). Raw TaHoma capabilities and action classification remain missing; resource comparison is deferred to final validation |
 | P04 — HAP decision | Not started; P02 dependency available; no native backend approved |
 | P05 and later | Not started; follow plan dependencies |
 | Application/tests/CI | P02 minimal CLI and six tests integrated; P03 adds offline fictional-fixture validation. No native compatibility or memory gain demonstrated |
@@ -65,7 +69,7 @@ Authentication: existing GitHub CLI session works as `magic5644`. A previous sys
 
 - UI versions rechecked during the owner-authorized P03 follow-up: Homebridge 2.4.0, UI 5.29.0, Node 24.21.0, homebridge-tahoma 2.2.64 child bridge; Ubuntu 22.04.5 x64 container.
 - All 23 Homebridge accessory dialogs inspected read-only: 11 `RollerShutter` projections, 2 `HeatingSystem`, 1 `GarageDoor`, 9 Switch projections with default model/manufacturer. All identify homebridge-tahoma; these are plugin model labels, not physical-model proof. Actual capabilities, action effects and radio split remain unqualified. No credentials or raw configuration inspected.
-- Owner-authorized QNAP UI inspection confirms TS-251+, J1900 (4 cores/4 threads), 2 GB RAM, QTS 5.2.10.3577 Build 20260731, and Container Station 3.1.2.1742. Single running Homebridge container: image/digest and reviewed runtime/network/storage facts in [baseline](performance-baseline.md). No settings or services changed. Instantaneous host metrics do not complete the 30-minute process/cgroup baseline.
+- Owner-authorized QNAP UI inspection confirms TS-251+, J1900 (4 cores/4 threads), 2 GB RAM, QTS 5.2.10.3577 Build 20260731, and Container Station 3.1.2.1742. Single running Homebridge container: image/digest and reviewed runtime/network/storage facts in [baseline](performance-baseline.md). No settings or services changed. Instantaneous host metrics are observations only; the comparative process/cgroup measurement is deferred to final validation by owner decision.
 - TaHoma developer API detected; HTTPS with validated CA/DNS; public `apiVersion` read succeeded, protocol `2026.4.5-7`.
 - No TaHoma token used for that test, no physical commands, no Homebridge/NAS modifications. P02 performed no hardware tests.
 
@@ -74,7 +78,7 @@ Internal addresses, PINs, tokens, and household names are excluded from this pub
 ## Resumption point
 
 1. Review the P03 partial-delivery PR and [session evidence](sessions/P03.md). P02 is `done`; do not repeat its pending-merge gate.
-2. Resume **P03 only** using the owner-authorized existing Homebridge UI and privately collected evidence for remaining raw capabilities, action/Apple Home usage, and a complete production resource report or read-only measurement access. The owner keeps the TaHoma token; token transfer is not required. No credentials in chat, Git, CI, or documentation queries.
-3. Collect missing kernel/plugin facts, qualify the remaining physical capabilities and nine Switch effects, and measure the unchanged required process set after warmup for 30 minutes. No physical commands or production changes.
+2. Resume **P03 only** using the owner-authorized existing Homebridge UI and privately collected evidence for remaining raw capabilities and action/Apple Home usage. Resource comparison is deferred to final validation and is not a P03 blocker. The owner keeps the TaHoma token; token transfer is not required. No credentials in chat, Git, CI, or documentation queries.
+3. Collect missing kernel/plugin facts, qualify the remaining physical capabilities and nine Switch effects, and retain the observed installation facts. Collect comparable legacy/Rust resource windows during final validation (P31/P38). No physical commands or production changes.
 4. P03 remains incomplete even if this preparatory PR is merged. Do not mark P05's P03 dependency available until the missing evidence is reviewed. P04 is independently eligible but was not started.
 5. Preserve the distinction between fictional tests, historical UI observations, actual hardware evidence, CI success and integration on `main`.

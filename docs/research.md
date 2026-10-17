@@ -1,5 +1,7 @@
 # Research and verification — October 17, 2026
 
+Owner update, October 17, 2026: JavaScript/TypeScript is allowed only for the browser UI, built off-NAS. The replacement server and HomeKit transport must be Rust with minimum memory/CPU overhead. HAP-NodeJS references below are historical research, not an approved fallback. If no Rust HAP library fits, P22 implements native HAP using established cryptographic libraries. Resource comparison is deferred to final validation (P31/P38), not a P03 prerequisite.
+
 ## Method and limits
 
 Official documentation and project repositories were inspected read-only. Context7 was used for Axum, Svelte, and Docker: `resolve-library-id`, official-project selection, then `query-docs` for a lightweight NAS home-automation Rust server. Other specific details were cross-checked against primary documentation. Exact versions are pinned as development starts.

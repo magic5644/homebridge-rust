@@ -44,7 +44,7 @@ These rules follow [GitHub secure-use documentation](https://docs.github.com/en/
 - Artifacts: versioned/digest image, native archive, `.qpkg`, checksums, and licenses. Build for generic x86_64, without the build machine's `target-cpu=native`.
 - Grant publication permissions only to jobs that need them, such as `packages: write` for GHCR or `contents: write` for a release; never globally for convenience.
 - Verify anonymous package access when an image must be public; repository visibility and GHCR visibility are distinct.
-- Keep native and hybrid profiles identified. A stable release requires planned acceptance evidence; no NAS deployment on a simple push/tag.
+- The product server and HomeKit backend are Rust-only; no Node sidecar/hybrid profile is planned. Browser assets may use JavaScript/TypeScript and are compiled off-NAS. A stable release requires planned acceptance evidence; no NAS deployment on a simple push/tag.
 
 ## GitHub settings and memory
 

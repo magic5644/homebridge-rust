@@ -23,7 +23,9 @@ All project documentation and PR descriptions must be in English. The planned Fr
 
 ## Recommended direction
 
-Build the server and integrations in Rust. Test native HomeKit feasibility early before selecting it permanently. Keep Homebridge for devices that still depend on its plugins; provide a small temporary HAP-NodeJS transport if the Rust HAP stack fails validation.
+Build the server, integrations and HomeKit transport in Rust, with minimum server memory and CPU overhead. JavaScript/TypeScript may be used in the browser UI; its build runs off-NAS and production serving uses Rust. Evaluate existing Rust HAP libraries first; if none is suitable, implement the transport in Rust using established cryptographic libraries. Keep the existing Homebridge only during migration for functions not yet replaced. No new JavaScript/TypeScript server or HAP-NodeJS fallback is planned.
+
+The owner deferred the comparative resource baseline to final validation (P31/P38); it is not a P03 gate. Resource gains will be measured on comparable functions before legacy removal.
 
 Compatibility with the entire household must be verified per device. Recompiling a JavaScript plugin does not make it a Rust plugin. An all-Rust edition will be delivered only after HomeKit validation and replacement of every required integration.
 

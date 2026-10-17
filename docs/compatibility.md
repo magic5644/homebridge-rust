@@ -12,7 +12,7 @@ The owner reported both io and RTS coverings. All eleven covering dialogs displa
 
 The owner subsequently supplied the authenticated QNAP session in Safari. System status confirms TS-251+, Celeron J1900 and 2 GB RAM, QTS 5.2.10.3577 Build 20260731. Container Station reports 3.1.2.1742 and one running Homebridge container. Its image/digest, Bridge/Qnet topology, writable persistent bind mount, resource limits and restart policy are recorded in the [baseline evidence](performance-baseline.md). Only reviewed technical facts are public; host/container IDs, addresses, hardware serials and host mount path are omitted.
 
-Kernel, redacted plugin options, controller versions, Apple Home automations, actual Matter usage and the full process/cgroup baseline remain uncollected. Homebridge/QNAP UI access is now available; missing raw capabilities and process metrics may be supplied as privately collected evidence without handing the agent a token.
+Kernel, redacted plugin options, controller versions, Apple Home automations, actual Matter usage remain uncollected. The process/cgroup comparison is deferred to final validation (P31/P38) by owner decision and does not block P03. Homebridge/QNAP UI access is now available; missing raw capabilities and process metrics may be supplied as privately collected evidence without handing the agent a token.
 
 ## Coverage of all visible elements
 
@@ -71,7 +71,7 @@ Normalized shared position remains closed=0/open=100. The io fixture's raw `core
 
 ## Prerequisites still missing
 
-- P03: remaining kernel/plugin facts, raw capabilities/setup evidence, each action's effects/usage, and the [resource baseline](performance-baseline.md). Homebridge UI inventory is now observed; no token transfer is required to review privately collected evidence.
+- P03: remaining kernel/plugin facts, raw capabilities/setup evidence, each action's effects/usage. The [resource comparison](performance-baseline.md) is deferred to final validation and is not a P03 gate. Homebridge UI inventory is now observed; no token transfer is required to review privately collected evidence.
 - P11–P14: confirmed raw models, commands, states, bounds/units and detailed event/error shapes before claiming real compatibility. Current fixtures support only synthetic tests.
 - P33/P34/P35: garage safety/feedback, both heating profiles, and all nine action classifications. Hardware validation remains separate and requires specific authorization.
 - P05: P03 is not complete; P04 is independently still required. This partial delivery does not clear either dependency.
