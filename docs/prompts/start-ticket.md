@@ -1,46 +1,47 @@
-# Démarrer une session de ticket
+# Start a ticket session
 
-Ouvrir une nouvelle session dans le projet `Homebridge-rust`, choisir le modèle souhaité puis coller le prompt ci-dessous. Remplacer uniquement `PXX` par l'identifiant voulu. Le premier ticket de développement est **P02**.
+Open a new session in the `Homebridge-rust` project, select the desired model, and paste the prompt below. Replace only `PXX` with the desired ID. The first development ticket is **P02**; after its merge is verified, P03 or P04 becomes eligible.
 
 ```text
-Implémente uniquement le ticket PXX de ce dépôt.
+Implement only ticket PXX in this repository.
 
-Lis AGENTS.md, docs/project-state.md et la section PXX de
+Read AGENTS.md, docs/project-state.md, and the PXX section of
 docs/superpowers/plans/2026-10-17-homebridge-rust.md.
-Lis ensuite les contrats, l'architecture et les fichiers cités par ce ticket.
-Pour la CI et GitHub, applique aussi
+Then read the contracts, architecture, and files cited by the ticket.
+For CI and GitHub, also apply
 .github/instructions/github-actions-memory.instructions.md.
 
-Vérifie l'état Git, les PR et que les prérequis sont réellement disponibles.
-Travaille sur une branche dédiée au ticket, en préservant mes changements.
-Cette session traite un seul ticket, sans délégation automatique.
-Avance en autonomie sur toutes les étapes ordinaires autorisées.
+Verify Git state, PRs, and that prerequisites are actually available on main.
+Work on a dedicated ticket branch, preserving my changes.
+This session handles one ticket only, without automatic delegation.
+Proceed autonomously with all ordinary authorized steps.
 
-Implémente le minimum complet, avec tests pertinents et vérifications réelles.
-N'utilise que des données fictives pour les tests et ne commande aucun
-équipement réel. Ne lance ni installation de production, ni release.
+Implement the complete minimum with relevant tests and real checks.
+Use only fictional test data and do not command real equipment.
+Do not perform a production installation or publish a release.
+Write all project documentation, comments, reports, and PR descriptions in English.
 
-Une fois les contrôles locaux réussis, committe les fichiers du ticket,
-pousse sa branche et crée ou actualise une PR vers main, sans la fusionner.
-Vérifie la CI du dernier commit poussé et corrige ses échecs liés au ticket.
-Si une preuve ou un prérequis indispensable est inaccessible, explique-le
-précisément ; ne marque pas une validation non exécutée comme réussie.
+Once local checks pass, commit ticket files, push the branch, and create or
+update a PR to main without merging it. Verify CI for the latest pushed
+commit and fix failures related to the ticket. If essential evidence or a
+prerequisite is inaccessible, explain precisely; never report an unrun check
+as successful.
 
-Mets à jour docs/project-state.md, les cases prouvées du plan et
-docs/sessions/PXX.md ; inclus ces documents dans la PR puis vérifie aussi
-le dernier commit. Cite le commit d'implémentation testé dans le rapport
-sans chercher à rendre le rapport auto-référent.
+Update docs/project-state.md, proven plan checkboxes, and
+docs/sessions/PXX.md; include them in the PR and verify the final commit too.
+Cite the tested implementation commit in the report without trying to make
+the report self-referential.
 
-Termine avec résultat, lien de PR, contrôles effectués et limites restantes.
-Arrête-toi après ce ticket. Ne démarre pas le suivant.
+Conclude with the result, PR link, checks, and remaining limits.
+Stop after this ticket. Do not start the next one.
 ```
 
-## Particularités de P02
+## P02 specifics
 
-P02 construit le premier harnais exécutable : quatre packages Rust minimaux, toolchain et lockfile figés, CLI minimale, tests CLI, `scripts/check.sh` et workflow `.github/workflows/check.yml` exécuté sur GitHub.
+P02 builds the first executable baseline: four minimal Rust packages, pinned toolchain and lockfile, minimal CLI, CLI tests, `scripts/check.sh`, and `.github/workflows/check.yml` executed on GitHub.
 
-Les instructions et la mémoire sont déjà présentes : les compléter si nécessaire, sans les reconstruire ni implémenter les fonctionnalités Somfy/HAP des tickets suivants. Le frontend complet appartient au P17.
+Instructions and memory already exist: extend them where necessary without rebuilding them or implementing Somfy/HAP features belonging to later tickets. The full frontend belongs to P17.
 
-Le choix du ticket P02 autorise son implémentation dans le périmètre de l'architecture proposée ; il n'est pas nécessaire de redemander une approbation pour le workspace minimal. Les décisions HAP, tests matériels et bascules restent aux lots qui les portent.
+Selecting P02 authorizes its minimum implementation within the proposed architecture; do not ask again for workspace approval. HAP decisions, hardware tests, and migrations remain with their respective tickets.
 
-Pour un ticket ultérieur, vérifier la fusion de ses dépendances. P03 exige des données et accès locaux ; P04 exige une preuve HomeKit distincte. Un manque d'accès ne se corrige pas en inventant des fixtures prétendument capturées ou des validations matérielles.
+For later tickets, verify merged dependencies. P03 requires local data/access; P04 requires distinct HomeKit evidence. Missing access must not be replaced with fixtures claimed to be captured or with invented hardware validation.
