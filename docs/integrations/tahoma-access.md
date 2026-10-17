@@ -31,3 +31,23 @@ Account mode uses private write-only credentials, restricted local secret/sessio
 [PyOverkiz authentication documentation](https://github.com/imicknl/python-overkiz-api/blob/main/docs/getting-started.md), consulted through Context7, is secondary implementation evidence for token/account modes, not a Somfy cloud API stability guarantee. Its suggestion to disable TLS for IP connections is expressly excluded here. The [official local OpenAPI](https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/blob/main/docs/openapi.yaml) does not prove stored-scenario parity. Current Homebridge inventory uses Somfy Europe/cloud; importing those projections does not demonstrate local support.
 
 The test-connection action performs authentication and bounded inventory reads only. `legacy` and `observe` prohibit device/scenario commands and HomeKit publication in either mode.
+
+## Owner-run read-only export for P03
+
+On the Mac, on the same LAN as TaHoma, open Terminal in the repository root and run:
+
+```sh
+rtk proxy python3 -B scripts/capture_tahoma_setup.py
+```
+
+The helper uses Python's standard library on the Mac only; it is not a server dependency or NAS installation. It first downloads the public manufacturer CA over validated HTTPS, then asks for the gateway PIN and local developer token with hidden input. Enter the PIN displayed in the Somfy box parameters, including its hyphens. Paste only the token at the second prompt; no characters should appear while entering it. Press Return after each prompt. Neither value belongs in the command itself or in this chat.
+
+If the old token was not saved, it cannot be recovered from the mobile application: generate a new one yourself using the steps above. Do not revoke an existing integration's token. No token is read from Homebridge, the browser or a credential store.
+
+The helper constructs the official gateway DNS endpoint from the entered PIN and performs exactly one authenticated `GET /setup`. It does not register event listeners, execute/cancel scenarios, publish HomeKit accessories or change equipment/configuration. It ignores proxy environment variables, rejects redirects, validates the manufacturer CA/DNS identity, uses a 10-second request timeout and limits setup to 4 MiB. A hostname/CA failure stops the capture without disabling TLS or trying a cloud endpoint. DNS derivation follows the official OpenAPI server template; discovery identity still requires separate qualification at P10.
+
+Success prints only a fixed message. The raw response is saved as `private/tahoma-setup.json` (0600 inside a 0700 directory), excluded from Git. The helper does not save the token, print the response or overwrite an existing capture. The response can contain household labels and identifiers: keep it local and tell the agent only that capture finished. The agent can then review the local technical declarations without receiving the token; only a separately reviewed anonymous summary may enter Git. This raw file is not a public fixture.
+
+Errors are summarized without URLs, identifiers or response bodies. For HTTP 401/403, check that the pasted value is a local developer token, not an account password. For DNS/TLS/connection errors, check the Mac is on the same LAN, the entered PIN and existing developer-mode status; report only the generic error message. Do not bypass certificate validation or paste private details. If Python is unavailable, report that prerequisite; no software is installed automatically.
+
+Tests in `tests/test_capture_tahoma_setup.py` use fictional input and an in-memory transport. They cover the single GET, invalid inputs, size/JSON/secret-echo rejection, redirect refusal, private-file permissions, overwrite/symlink protection and noninteractive input refusal. No CI job contacts a gateway. Passing tests do not prove a successful capture from this installation.
