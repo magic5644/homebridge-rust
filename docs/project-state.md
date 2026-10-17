@@ -37,7 +37,7 @@ Pxx values are Markdown plan IDs, not GitHub issue numbers. Add an issue/PR link
 | P01 — repository/design | `done`; design published on `main`, initial reference `dec76c0` |
 | Instructions/session memory | Versioned; English-language policy and translation included in P02 at owner request |
 | P02 — Rust workspace/CI | `done`; [PR #1](https://github.com/magic5644/homebridge-rust/pull/1) merged; remote `main` `2c0350c73f2411dabbe1a0d195928593ae566791`, exact-commit [CI passed](https://github.com/magic5644/homebridge-rust/actions/runs/39041606358) |
-| P03 — detailed inventory | `blocked` on installation access; branch `feat/p03-inventory-baseline` delivers fictional fixtures, 23 unqualified inventory rows and baseline protocol; see [P03 report](sessions/P03.md). Authenticated inventory, action classification and real measurements remain missing |
+| P03 — detailed inventory | `blocked` on installation access; [draft PR #2](https://github.com/magic5644/homebridge-rust/pull/2), branch `feat/p03-inventory-baseline`, delivers fictional fixtures, 23 unqualified inventory rows and baseline protocol; see [P03 report](sessions/P03.md). Authenticated inventory, action classification and real measurements remain missing |
 | P04 — HAP decision | Not started; P02 dependency available; no native backend approved |
 | P05 and later | Not started; follow plan dependencies |
 | Application/tests/CI | P02 minimal CLI and six tests integrated; P03 adds offline fictional-fixture validation. No native compatibility or memory gain demonstrated |
