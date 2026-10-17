@@ -1,51 +1,52 @@
 # Homebridge Rust — Implementation Plan
 
-> **For agentic workers:** Use `executing-plans` for inline execution of the selected ticket. Steps use checkbox syntax for tracking. Le propriétaire demande **un ticket par session**, modèle choisi par lui, avec mémoire versionnée et PR. Ne pas déléguer ni enchaîner les tickets automatiquement. Lire `AGENTS.md` et `docs/project-state.md` au début.
+> **For agentic workers:** Use `executing-plans` for inline execution of the selected ticket. Steps use checkbox syntax for tracking. The owner requires **one ticket per session**, with an owner-selected model, versioned memory, and a PR. Do not delegate or automatically continue to another ticket. Read `AGENTS.md` and `docs/project-state.md` at startup.
 
-**Goal:** Remplacer progressivement l'installation du QNAP TS-251+ par un pont Rust administrable sur le Web, avec volets io/RTS, garage, chauffage et actions existantes conservés.
+**Goal:** Gradually replace the QNAP TS-251+ installation with a Web-administered Rust bridge while preserving io/RTS coverings, garage, heating, and existing actions.
 
-**Architecture:** Un cœur Rust et des connecteurs compilés, une UI statique, un transport HomeKit validé au début. Le child bridge Homebridge reste actif pour les fonctions non encore remplacées. Le profil final sans Node.js est conditionné à la couverture de tout l'inventaire.
+**Architecture:** Rust core and compiled connectors, static UI, and HomeKit transport validated early. Keep the Homebridge child bridge active for functions not yet replaced. A final Node-free profile requires full inventory coverage.
 
-**Tech Stack:** Rust stable/2024, Tokio, Axum, serde, reqwest/Rustls, rusqlite, Svelte/TypeScript/Vite, Docker/Compose, QNAP QDK. HAP Rust après preuve, HAP-NodeJS en repli explicite.
+**Tech Stack:** Stable Rust/2024, Tokio, Axum, serde, reqwest/Rustls, rusqlite, Svelte/TypeScript/Vite, Docker/Compose, QNAP QDK. Rust HAP after proof, HAP-NodeJS as explicit fallback.
 
-**Spec:** [Architecture](../../architecture.md), [contrats](../../contracts.md), [guide Luna](../../execution-luna.md), [inventaire](../../inventory-template.md).
+**Spec:** [Architecture](../../architecture.md), [contracts](../../contracts.md), [Luna guide](../../execution-luna.md), [inventory](../../inventory-template.md).
 
 ## Global Constraints
 
-- Matériel prioritaire : QNAP TS-251+, Intel Celeron J1900, 2 Go ; construire hors du NAS, cible x86_64 générique.
-- Box cible : TaHoma V2 ; io-homecontrol **et** RTS obligatoires.
-- Inventaire visuel initial : 11 coverings, 2 thermostats, 1 garage, 9 Switch, soit 23 éléments à qualifier.
-- Versions observées : Homebridge 2.4.0, UI 5.29.0, Node 24.21.0, homebridge-tahoma 2.2.64.
-- Aucun secret, identifiant réel de passerelle, fichier de persistance ou inventaire nominatif dans le dépôt public.
-- `observe` et `legacy` interdisent les écritures et la publication HomeKit depuis Rust.
-- Une commande physique incertaine n'est jamais rejouée automatiquement.
-- Un état estimé n'est jamais présenté comme mesuré ; aucune fermeture de garage inventée.
-- Les contrats de `docs/contracts.md`, y compris les tailles de files et délais, s'appliquent à tous les tickets.
-- Conserver tout usage existant via un chemin connu jusqu'à sa validation native ; ne pas confondre maintien legacy et remplacement terminé.
-- Livraison Docker **et** `.qpkg` QNAP requises ; pas de compilation ni npm sur le NAS en profil natif.
-- Tests automatiques sur données fictives ; les essais physiques constituent une phase distincte avec le propriétaire.
-- Préfixer les commandes shell par `rtk` sur le poste courant, conformément au fichier RTK de l'environnement ; la CI utilise les outils natifs.
-- Une session traite uniquement le ticket choisi et laisse son état dans `docs/project-state.md` et son rapport dans `docs/sessions/PXX.md`.
+- Priority hardware: QNAP TS-251+, Intel Celeron J1900, 2 GB; build off-NAS for generic x86_64.
+- Target gateway: TaHoma V2; both io-homecontrol **and** RTS required.
+- Initial visual inventory: 11 coverings, 2 thermostats, 1 garage, 9 Switch elements; 23 elements to qualify.
+- Observed versions: Homebridge 2.4.0, UI 5.29.0, Node 24.21.0, homebridge-tahoma 2.2.64.
+- No secrets, real gateway IDs, persistence files, or named household inventory in the public repository.
+- `observe` and `legacy` prohibit Rust writes and HomeKit publication.
+- Never automatically replay an uncertain physical command.
+- Never present estimates as measurements or invent a closed garage state.
+- `docs/contracts.md`, including queue sizes/deadlines, applies to every ticket.
+- Preserve each existing use case through a known path until native validation; retaining legacy is not completed replacement.
+- Docker **and** QNAP `.qpkg` delivery required; no compilation/npm on the NAS in native mode.
+- Automated tests use fictional data; physical tests are a separate phase with the owner.
+- Prefix local shell commands with `rtk` as required by the environment RTK file; CI uses native tools.
+- Each session handles only the chosen ticket and leaves state in `docs/project-state.md` and a report in `docs/sessions/PXX.md`.
+- All project documentation, comments, prompts, reports, and PR descriptions are written in English.
 
 ## Review Focus
 
-1. POST TaHoma accepté mais réponse perdue : résultat `Unknown`, un seul envoi, aucun replay au reboot — P15/P18.
-2. Télécommande RTS utilisée hors du logiciel : ne pas maintenir une position « confirmée » fictive — P13/P24.
-3. Box usurpée, mauvaise CA ou redirection avec token : connexion refusée, aucun secret transmis ailleurs — P11.
-4. Disque plein, archive hostile ou rollback de schéma : préserver données et identités avant toute bascule — P06/P26/P32.
-5. Binaire incompatible avec le J1900, service QPKG dupliqué ou arrêté brutalement : refus clair ou arrêt propre, pas de perte d'état — P28/P29.
+1. Accepted TaHoma POST with lost response: `Unknown`, one send, no reboot replay — P15/P18.
+2. External RTS remote: no fictitious confirmed position — P13/P24.
+3. Spoofed gateway, wrong CA, token-bearing redirect: connection refused, no secret sent elsewhere — P11.
+4. Full disk, hostile archive, schema rollback: preserve data/identities before switching — P06/P26/P32.
+5. J1900-incompatible binary, duplicate QPKG service, abrupt termination: clear refusal or clean shutdown, no state loss — P28/P29.
 
-## 1. Exécution et taille des tâches
+## 1. Execution and task sizing
 
-Une tâche ci-dessous est une unité de revue, généralement de 0,5 à 1,5 jour. Si elle dépasse une journée d'agent sans résultat vérifiable, la découper en sous-tâches de 1 à 3 heures conservant le même contrat. Une preuve HAP ou matérielle ne se conclut pas sur le seul résultat d'un agent.
+Each task below is a review unit, usually 0.5–1.5 days. If it exceeds one agent-day without a verifiable result, split it into 1–3 hour subtasks preserving the same contract. Agent output alone cannot complete HAP or hardware proof.
 
-Pour chaque ticket de code : lire les fichiers et tous les appelants → écrire le test ciblé → constater son échec pour la raison attendue → implémenter le minimum → exécuter la vérification indiquée → mettre à jour documentation/fixtures touchées → commit limité au ticket → revue. Une tâche de documentation ne nécessite pas de test artificiel.
+For each code ticket: read affected files/all callers → write a targeted test → observe failure for the expected reason → implement the minimum → run the specified checks → update affected documentation/fixtures → focused commit → review. Documentation tasks need no artificial tests.
 
-Commandes indiquées avec `cargo`/`npm` ci-dessous : les exécuter via `rtk cargo ...` ou `rtk proxy npm ...` sur ce poste. Les scripts shell nouveaux ont une vérification avec `sh -n` et un scénario de service simulé ; les scripts de production ne sont jamais testés en lançant des moteurs réels.
+Run `cargo`/`npm` commands below through `rtk cargo ...` or `rtk proxy npm ...` on this machine. New shell scripts require `sh -n` and a simulated-service scenario; never test production scripts by operating real motors.
 
-Les packages workspace s'appellent exactement `bridge-core`, `integration-tahoma`, `transport-homekit`, `bridge-server`. `cargo test -p PACKAGE --test NAME` désigne le fichier `crates/PACKAGE/tests/NAME.rs`. Les scripts npm sont figés au P17 : `check`, `test`, `build`, `test:e2e`.
+Workspace package names are exactly `bridge-core`, `integration-tahoma`, `transport-homekit`, `bridge-server`. `cargo test -p PACKAGE --test NAME` refers to `crates/PACKAGE/tests/NAME.rs`. P17 fixes npm script names: `check`, `test`, `build`, `test:e2e`.
 
-## 2. Dépendances et jalons
+## 2. Dependencies and milestones
 
 ```mermaid
 flowchart TD
@@ -102,492 +103,494 @@ flowchart TD
     P37 --> P38
 ```
 
-Les dépendances écrites dans chaque ticket priment sur le schéma simplifié. P21 **ou** P22 est activé après décision P04 ; un seul backend est nécessaire pour M3. P36 ne produit du code que si d'autres usages sont découverts. P35 n'est pas facultatif : les neuf Switch doivent être couverts même si leur implémentation provisoire reste legacy.
+Dependencies written in individual tickets take precedence over the simplified graph. Activate P21 **or** P22 after P04; only one backend is needed for M3. P36 produces code only if other uses are discovered. P35 is mandatory: cover all nine Switch elements even if their temporary implementation stays legacy.
 
-| Jalon | Tickets nécessaires | Sortie autorisée |
+| Milestone | Required tickets | Authorized output |
 |---|---|---|
-| M0 — décisions | P01–P05 | Contrats et décision HAP ; aucune migration |
-| M1 — socle | P06–P09, P17 | UI/API sur simulateur, aucun appareil physique |
-| M2 — Somfy | P10–P16, P18–P19 | Observation locale puis commandes de test sur simulateur |
-| M3 — produit | P20 + P21 ou P22, P23–P26 | Parcours complet et pont de test |
-| M4 — distribution | P27–P30 | Docker et QPKG testables, pas de bascule automatique |
-| M5 — pilote | P31–P35, P37 | Validation réelle par famille, stabilité 72 h |
-| M6 — retrait legacy | P36/P38 | Zéro dépendance legacy prouvée avant retrait de Node |
+| M0 — decisions | P01–P05 | Contracts/HAP decision; no migration |
+| M1 — baseline | P06–P09, P17 | Simulator UI/API; no physical device |
+| M2 — Somfy | P10–P16, P18–P19 | Local observation, then simulated command tests |
+| M3 — product | P20 + P21 or P22, P23–P26 | Full flow and test bridge |
+| M4 — distribution | P27–P30 | Testable Docker/QPKG; no automatic migration |
+| M5 — pilot | P31–P35, P37 | Real per-family validation, 72 h stability |
+| M6 — legacy removal | P36/P38 | Prove zero legacy dependency before removing Node |
 
 ## 3. Tickets
 
-### P01 — Dépôt public et dossier de conception
+### P01 — Public repository and design documents
 
-**Dépendances :** aucune. **Livrable :** `magic5644/homebridge-rust`, public conformément au choix du propriétaire, avec ce dossier uniquement.
+**Dependencies:** none. **Deliverable:** `magic5644/homebridge-rust`, public as requested by the owner, initially containing only these documents.
 
-**État : réalisé le 17 octobre 2026 pendant la préparation du dossier.** [Dépôt vérifié](https://github.com/magic5644/homebridge-rust). Pour l'état des tickets de développement, consulter [la mémoire courante](../../project-state.md).
+**Status: completed October 17, 2026 during document preparation.** [Verified repository](https://github.com/magic5644/homebridge-rust). See [current memory](../../project-state.md) for development-ticket state.
 
-**Fichiers :** `README.md`, `.gitignore`, `docs/**`. **Interfaces :** aucune API produit.
+**Files:** `README.md`, `.gitignore`, `docs/**`. **Interfaces:** no product API.
 
-- [x] Vérifier le compte actif avec `gh api user --jq .login` et l'absence de dépôt homonyme ; ne jamais écraser un dépôt existant.
-- [x] Vérifier les liens relatifs et rechercher les secrets/identifiants réels dans tous les fichiers publiables ; exclure `.graph-it`, données locales et métadonnées privées.
-- [x] Initialiser `main`, créer le dépôt public, publier un commit `docs: plan Rust home automation bridge` et vérifier propriétaire, visibilité et commit distant.
-- [x] Garder un statut « conception » dans le README ; aucune application fictivement annoncée installable.
+- [x] Verify active account with `gh api user --jq .login` and absence of an existing same-name repository; never overwrite one.
+- [x] Check relative links and search all publishable files for secrets/real identifiers; exclude `.graph-it`, local data, and private metadata.
+- [x] Initialize `main`, create the public repository, publish `docs: plan Rust home automation bridge`, and verify owner, visibility, and remote commit.
+- [x] Keep a design-only README status at initial delivery; do not invent an installable application.
 
-**Clôture :** URL publique consultable, fichiers attendus présents, aucun code de production, aucune donnée privée publiée.
+**Completion:** accessible public URL, expected files present, no production code or private data published at initial delivery.
 
-### P02 — Workspace compilable et socle de validation
+<a id="p02--workspace-compilable-et-socle-de-validation"></a>
 
-**Dépendances :** P01 ; le lancement explicite de P02 avec le prompt de session autorise son socle minimal dans l'architecture proposée. **Fichiers :** `Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml`, `crates/*/Cargo.toml`, `crates/*/src/lib.rs`, `crates/bridge-server/src/main.rs`, `crates/bridge-server/tests/cli_version.rs`, `docs/dependencies.md`, `scripts/check.sh`, `.github/workflows/check.yml`, `docs/sessions/P02.md` et mémoire courante.
+### P02 — Compilable workspace and validation baseline
 
-**Produit :** quatre packages définis plus haut ; `bridge-server --version` et `bridge-server check --config PATH`.
+**Dependencies:** P01; explicit P02 startup with the session prompt authorizes its minimal baseline within the proposed architecture. **Files:** `Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml`, `crates/*/Cargo.toml`, `crates/*/src/lib.rs`, `crates/bridge-server/src/main.rs`, `crates/bridge-server/tests/cli_version.rs`, `docs/dependencies.md`, `scripts/check.sh`, `.github/workflows/check.yml`, `docs/sessions/P02.md`, and current memory.
 
-- [ ] Figer versions Rust et dépendances après consultation Context7 des bibliothèques concernées ; documenter licences et versions sans prétendre qu'une famille vaut la version exacte.
-- [ ] Créer les quatre packages avec le minimum de dépendances ; ne pas ajouter de framework de plugins.
-- [ ] Ajouter `cli_version` : sortie contient version du package, code 0 ; config absente → erreur lisible, code non nul, aucun fichier écrasé.
-- [ ] Créer `scripts/check.sh` comme point d'entrée de `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `cargo test --workspace --locked`, `cargo build -p bridge-server --release --locked` ; le script s'arrête au premier échec. Vérifier `sh -n`, son échec sur un contrôle simulé en erreur et l'exécution réelle de ces commandes.
-- [ ] Faire exécuter ce script en CI selon la mémoire GitHub Actions : job stable `Rust checks`, PR/push main, permissions minimales, actions épinglées, timeout et données fictives. Choisir la licence du code et conserver les notices des composants repris.
-- [ ] Pousser une branche et créer une PR, vérifier la CI du dernier commit ; consigner commandes, résultats et limites dans `docs/sessions/P02.md` et `docs/project-state.md`. Aucune fusion ni release automatique.
+**Produces:** the four packages defined above; `bridge-server --version` and `bridge-server check --config PATH`.
 
-**Clôture :** build reproductible minimal, CI verte, aucun appel réseau domestique au démarrage des tests.
+- [x] Pin Rust/dependency versions after consulting Context7 for relevant libraries; document licenses/exact versions without treating a version family as an exact version.
+- [x] Create four packages with minimum dependencies; no plugin framework.
+- [x] Add `cli_version`: output contains package version, exit 0; missing config → readable error, nonzero exit, no overwritten files.
+- [x] Create `scripts/check.sh` as entry point for `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `cargo test --workspace --locked`, `cargo build -p bridge-server --release --locked`; stop on first failure. Verify `sh -n`, a simulated failed check, and real command execution.
+- [x] Run the script in CI following GitHub Actions memory: stable `Rust checks` job, PR/push main, minimum permissions, pinned actions, timeout, fictional data. Choose a code license and preserve notices for reused components.
+- [x] Push a branch/create a PR, verify latest-commit CI; record commands, results, and limits in `docs/sessions/P02.md`/`docs/project-state.md`. No automatic merge/release.
 
-### P03 — Inventaire exploitable, baseline et fixtures
+**Completion:** minimal reproducible build, green CI, no home-network calls at test startup. PR evidence and integration status are recorded in [P02 report](../../sessions/P02.md); checked implementation steps do not mean merged on `main`.
 
-**Dépendances :** P02 ; lecture seule de l'installation par une session autorisée. **Fichiers :** `docs/compatibility.md`, `docs/performance-baseline.md`, `fixtures/tahoma/*.json`, `tests/fixtures_manifest.json`. Données réelles : `private/` exclu de Git.
+### P03 — Usable inventory, baseline, and fixtures
 
-**Produit :** liste anonymisée des 23 éléments visibles, distinction appareil physique/action, fonctionnalités utilisées et chemin de secours.
+**Dependencies:** P02; read-only access to the installation by an authorized session. **Files:** `docs/compatibility.md`, `docs/performance-baseline.md`, `fixtures/tahoma/*.json`, `tests/fixtures_manifest.json`. Real data: Git-excluded `private/`.
 
-- [ ] Relever QTS, Container Station, topologie et ports, versions et configuration utile du plugin ; ne jamais copier secrets ou `persist/` dans les fixtures.
-- [ ] Lire le setup TaHoma avec un token fourni localement ; relever `controllableName`, commandes, états et modèle pour chaque profil io/RTS, garage et chauffage.
-- [ ] Classer les neuf Switch ; relever leurs effets, et la façon dont ils sont utilisés dans Maison. État affiché dans l'UI ≠ preuve de mesure physique.
-- [ ] Mesurer les processus requis pendant 30 min après échauffement, sans modifier les services ; distinguer mémoire hôte, RSS/PSS et cgroup.
-- [ ] Produire les fixtures minimales du contrat avec des données fictives, puis un manifeste validant JSON, fichiers et absence de vrais identifiants.
+**Produces:** anonymized list of 23 visible elements, distinguishing physical devices/actions, used features, and fallback paths.
 
-**Vérification :** `python3 -m json.tool FILE` pour chaque fixture ; revue du tableau : chaque usage a une route actuelle et une cible. Les profils manquants sont un prérequis explicite du ticket concerné, pas un support déclaré.
+- [ ] Collect QTS, Container Station, topology/ports, versions, and relevant plugin configuration; never copy secrets or `persist/` into fixtures.
+- [ ] Read TaHoma setup with a locally provided token; collect `controllableName`, commands, states, and models for io/RTS, garage, and heating profiles.
+- [ ] Classify nine Switch elements; record effects and Apple Home usage. UI state is not evidence of a physical measurement.
+- [ ] Measure required processes for 30 min after warmup without modifying services; distinguish host memory, RSS/PSS, and cgroup.
+- [ ] Produce minimal contractual fixtures with fictional data and a manifest validating JSON, files, and absence of real identifiers.
 
-### P04 — Décision HomeKit Rust, budget maximal trois jours
+**Verification:** `python3 -m json.tool FILE` for each fixture; review every use case's current path/target. Missing profiles are explicit prerequisites for their tickets, not declared support.
 
-**Dépendances :** P02. **Fichiers :** `experiments/hap-proof/`, `docs/decisions/0001-homekit-backend.md`, `docs/hardware/hap-proof.md` ; aucune clé d'appairage versionnée.
+### P04 — Rust HomeKit decision, maximum three-day budget
 
-**Consomme :** candidat `ewilken/hap-rs` épinglé et HAP-NodeJS de référence. **Produit :** décision `native-approved`, `sidecar-required` ou `stop-and-review` et preuve reproductible.
+**Dependencies:** P02. **Files:** `experiments/hap-proof/`, `docs/decisions/0001-homekit-backend.md`, `docs/hardware/hap-proof.md`; no committed pairing keys.
 
-- [ ] Audit ciblé : compatibilité toolchain, dépendances, persistance, permissions, qualité des tests, besoin de maintenance ; compiler sous Linux x86_64 générique.
-- [ ] Exposer un interrupteur et un covering fictifs ; vérifier découverte, pairing, lectures, écritures et notifications depuis un contrôleur de test.
-- [ ] Tester redémarrage, ajout/retrait d'accessoire, suppression de contrôleur, données malformées et arrêt propre ; obtenir une preuve sur Apple Maison avec un pont de test.
-- [ ] Mesurer le prototype et noter tous les correctifs nécessaires. Aucune implémentation cryptographique maison et aucun contournement TLS/auth.
-- [ ] Choisir P21 ou P22 ; si un travail substantiel sur HAP est requis, le chiffrer séparément. À trois jours, décider avec les preuves disponibles.
+**Consumes:** pinned `ewilken/hap-rs` candidate and reference HAP-NodeJS. **Produces:** `native-approved`, `sidecar-required`, or `stop-and-review` decision plus reproducible evidence.
 
-**Clôture :** décision revue humainement pour HAP et sécurité ; un exemple compilé seul n'autorise pas `native-approved`.
+- [ ] Targeted audit: toolchain compatibility, dependencies, persistence, permissions, test quality, maintenance needs; compile for generic Linux x86_64.
+- [ ] Expose fictional switch/covering; verify discovery, pairing, reads, writes, notifications from a test controller.
+- [ ] Test restart, accessory addition/removal, controller removal, malformed data, clean shutdown; obtain Apple Home evidence on a test bridge.
+- [ ] Measure prototype/document every required fix. No custom cryptography or TLS/auth bypass.
+- [ ] Choose P21 or P22; estimate substantial HAP work separately. At three days, decide from available evidence.
 
-### P05 — Types et invariants partagés
+**Completion:** human HAP/security review; a compiled example alone does not authorize `native-approved`.
 
-**Dépendances :** P03, P04. **Fichiers :** `crates/bridge-core/src/{model,error,event,config}.rs`, `crates/bridge-core/tests/model_contract.rs`, exports `lib.rs` ; mise à jour du contrat si nécessaire.
+### P05 — Shared types and invariants
 
-**Consomme/produit :** tous les types des sections 1–6 des contrats, noms et sérialisation exacts.
+**Dependencies:** P03, P04. **Files:** `crates/bridge-core/src/{model,error,event,config}.rs`, `crates/bridge-core/tests/model_contract.rs`, `lib.rs` exports; contract updates if needed.
 
-- [ ] Tests `position_bounds` : 0 et 100 acceptés, 101 rejeté ; `unsupported_command` : commande hors capacité → `validation_error`.
-- [ ] Tests `quality_is_honest` : inconnu sans valeur ; estimation jamais convertie en mesure ; `ownership_blocks_writes` pour `legacy` et `observe`.
-- [ ] Implémenter les types, erreurs et validations ; pas de logique HTTP ni de dépendance TaHoma dans le cœur.
-- [ ] Vérifier `cargo test -p bridge-core --test model_contract` puis le workspace ; sauvegarder les exemples JSON partagés.
+**Consumes/produces:** every type from contract sections 1–6, exact names/serialization.
 
-**Clôture :** consommateurs peuvent travailler sans renommer les interfaces à leur convenance.
+- [ ] `position_bounds`: accept 0/100, reject 101; `unsupported_command`: capability mismatch → `validation_error`.
+- [ ] `quality_is_honest`: unknown has no value; estimates never become measurements; `ownership_blocks_writes` for `legacy`/`observe`.
+- [ ] Implement types, errors, validation; no HTTP logic or TaHoma dependency in core.
+- [ ] Run `cargo test -p bridge-core --test model_contract`, then workspace checks; save shared JSON examples.
 
-### P06 — SQLite, identités et atomicité
+**Completion:** consumers work without renaming interfaces at will.
 
-**Dépendances :** P05. **Fichiers :** `bridge-core/src/store.rs`, `bridge-core/src/migrations/001.sql`, `bridge-core/tests/store_contract.rs`, `bridge-core/tests/store_failures.rs` sous `crates/`.
+### P06 — SQLite, identities, and atomicity
 
-**Produit :** API `Store` du contrat, worker dédié et verrou du répertoire.
+**Dependencies:** P05. **Files:** `bridge-core/src/store.rs`, `bridge-core/src/migrations/001.sql`, `bridge-core/tests/store_contract.rs`, `bridge-core/tests/store_failures.rs` under `crates/`.
 
-- [ ] `identity_survives_rename_restart` : même UUID et AID/IID après rename, réordre, retrait temporaire et réouverture ; aucun recyclage implicite.
-- [ ] `revision_and_state_commit_together`, `second_writer_refused`, `idempotency_persists` et `interrupted_command_becomes_unknown` avec base temporaire.
-- [ ] `disk_full_preserves_previous_state` : simuler l'échec d'écriture ; aucune révision ni réussite publiée ; ancienne base relisible.
-- [ ] Implémenter tables/contraintes et transactions, file de 64, API async sans blocage SQLite sur Tokio.
-- [ ] Vérifier `cargo test -p bridge-core --test store_contract --test store_failures` ; échec d'une migration → ancienne base préservée/restaurable.
+**Produces:** contractual `Store` API, dedicated worker, directory lock.
 
-### P07 — Configuration et secrets locaux
+- [ ] `identity_survives_rename_restart`: same UUID/AID/IID after rename, reorder, temporary removal, reopening; no implicit recycling.
+- [ ] `revision_and_state_commit_together`, `second_writer_refused`, `idempotency_persists`, `interrupted_command_becomes_unknown` with temporary databases.
+- [ ] `disk_full_preserves_previous_state`: simulate write failure; no published revision/success; old database remains readable.
+- [ ] Implement tables/constraints/transactions, 64-slot queue, async API without blocking SQLite on Tokio.
+- [ ] Run `cargo test -p bridge-core --test store_contract --test store_failures`; migration failure preserves/restores the old database.
 
-**Dépendances :** P05. **Fichiers :** `bridge-core/src/config.rs`, `bridge-core/src/secrets.rs`, `bridge-core/tests/config_contract.rs`, `config.example.json`.
+### P07 — Configuration and local secrets
 
-**Produit :** `load_config(path: &Path) -> Result<AppConfig, BridgeError>` ; `save_config_atomic(path: &Path, config: &AppConfig) -> Result<(), BridgeError>` ; `AppConfig` contient listen, data_dir, TahomaConfig et HomeKitConfig.
+**Dependencies:** P05. **Files:** `bridge-core/src/config.rs`, `bridge-core/src/secrets.rs`, `bridge-core/tests/config_contract.rs`, `config.example.json`.
 
-- [ ] Tests : config invalide refusée sans écriture, token jamais sérialisé, permissions 0600 et répertoire 0700, fichier précédent conservé après échec de remplacement.
-- [ ] Définir schema_version=1, écoute par défaut `127.0.0.1:8582`, HAP 51827 ; valider les conflits connus sans supposer que les ports sont libres.
-- [ ] Charger les secrets depuis fichiers, pas depuis des URLs ou arguments de commande ; exemples sans valeur réelle.
-- [ ] Vérifier `cargo test -p bridge-core --test config_contract` ; `bridge-server check` ne se connecte pas aux appareils et ne les modifie pas.
+**Produces:** `load_config(path: &Path) -> Result<AppConfig, BridgeError>`; `save_config_atomic(path: &Path, config: &AppConfig) -> Result<(), BridgeError>`; `AppConfig` contains listen, data_dir, TahomaConfig, HomeKitConfig.
 
-### P08 — Authentification et enveloppe API
+- [ ] Tests: invalid config rejected without writing, token never serialized, 0600 files/0700 directories, previous file retained after failed replacement.
+- [ ] Set schema_version=1, default listen `127.0.0.1:8582`, HAP 51827; validate known conflicts without assuming ports are free.
+- [ ] Load secrets from files, not URLs/command arguments; examples contain no real values.
+- [ ] Run `cargo test -p bridge-core --test config_contract`; `bridge-server check` neither connects to nor modifies devices.
 
-**Dépendances :** P06, P07. **Fichiers :** `bridge-server/src/api/{mod,auth,error}.rs`, `bridge-server/src/bootstrap.rs`, `bridge-server/tests/auth_contract.rs`, `docs/api/openapi.yaml`.
+### P08 — Authentication and API envelope
 
-**Produit :** routes setup/auth/health des contrats ; session en base, CSRF, erreurs normalisées et limites.
+**Dependencies:** P06, P07. **Files:** `bridge-server/src/api/{mod,auth,error}.rs`, `bridge-server/src/bootstrap.rs`, `bridge-server/tests/auth_contract.rs`, `docs/api/openapi.yaml`.
 
-- [ ] Tests : setup à code expiré/incorrect refusé ; création une seule fois ; mot de passe haché ; session invalidée après logout.
-- [ ] Tests : écriture sans session → 401, sans CSRF ou Origin valide → 403 ; payload >256 Kio → 413 ; auth limitée sans rendre les erreurs révélatrices.
-- [ ] Implémenter Argon2id hors des workers async, sessions aléatoires ; aucune valeur sensible dans logs ; code de setup valable 10 min.
-- [ ] Décrire les routes du contrat dans OpenAPI, avec schémas de requête/réponse et exemples fictifs.
-- [ ] Vérifier `cargo test -p bridge-server --test auth_contract` et test de connexion via proxy HTTPS de développement.
+**Produces:** contractual setup/auth/health routes; database sessions, CSRF, normalized errors, limits.
 
-### P09 — Serveur simulé et API de lecture
+- [ ] Tests: reject expired/incorrect setup code; create admin once; hash password; logout invalidates session.
+- [ ] Tests: writes without session →401; missing CSRF/valid Origin →403; payload >256 KiB →413; rate-limited auth with nonrevealing errors.
+- [ ] Implement Argon2id outside async workers, random sessions; no sensitive logs; 10 min setup code.
+- [ ] Describe contractual routes in OpenAPI with request/response schemas and fictional examples.
+- [ ] Run `cargo test -p bridge-server --test auth_contract` and a login test through a development HTTPS proxy.
 
-**Dépendances :** P08, P03. **Fichiers :** `bridge-server/src/simulator.rs`, `bridge-server/src/api/devices.rs`, `bridge-server/tests/read_api.rs`, `fixtures/api/*.json`.
+### P09 — Simulated server and read API
 
-**Produit :** `GET devices/system/integrations` fonctionnels sur fixtures, lancement explicite `serve --simulate` ; jamais actif par défaut.
+**Dependencies:** P08, P03. **Files:** `bridge-server/src/simulator.rs`, `bridge-server/src/api/devices.rs`, `bridge-server/tests/read_api.rs`, `fixtures/api/*.json`.
 
-- [ ] Tests : liste et révision conformes au contrat, identifiants source/jetons absents ; appareil inconnu reste visible sans commandes.
-- [ ] Charger les fixtures dans une base temporaire et fournir le même registre que la future intégration ; pas de serveur parallèle dédié aux tests UI.
-- [ ] Vérifier `cargo test -p bridge-server --test read_api` ; fixture API consommable par le frontend.
+**Produces:** working fixture-based `GET devices/system/integrations`, explicit `serve --simulate`; never enabled by default.
 
-### P10 — Découverte TaHoma et identité réseau
+- [ ] Tests: contractual list/revision, no source IDs/tokens; unknown device stays visible without commands.
+- [ ] Load fixtures into a temporary database and use the future integration's registry; no separate UI-test server.
+- [ ] Run `cargo test -p bridge-server --test read_api`; frontend can consume API fixtures.
 
-**Dépendances :** P05. **Fichiers :** `integration-tahoma/src/discovery.rs`, `integration-tahoma/tests/discovery_contract.rs`.
+### P10 — TaHoma discovery and network identity
 
-**Produit :** fonction `discover(Duration)` du contrat, sans lecture d'équipement et sans activation du mode développeur.
+**Dependencies:** P05. **Files:** `integration-tahoma/src/discovery.rs`, `integration-tahoma/tests/discovery_contract.rs`.
 
-- [ ] Tests : TXT attendu accepté ; nom correspondant mais PIN TXT différent rejeté ; doublon multi-interface dédupliqué ; délai sans résultat → liste vide.
-- [ ] Naviguer uniquement le service développeur documenté ; permettre une adresse manuelle conservant le nom DNS pour TLS.
-- [ ] Vérifier `cargo test -p integration-tahoma --test discovery_contract` avec annonces simulées ; test mDNS réel optionnel séparé.
+**Produces:** contractual `discover(Duration)`, without device reads or developer-mode activation.
 
-### P11 — Client HTTP TaHoma et validation TLS
+- [ ] Tests: expected TXT accepted; matching name with different TXT PIN rejected; multi-interface duplicates deduplicated; timeout without results → empty list.
+- [ ] Browse only documented developer service; allow a manual address preserving TLS DNS name.
+- [ ] Run `cargo test -p integration-tahoma --test discovery_contract` with simulated announcements; optional real mDNS test stays separate.
 
-**Dépendances :** P10, P07, P03. **Fichiers :** `integration-tahoma/src/{client,dto}.rs`, `integration-tahoma/tests/{http_contract,tls_contract}.rs`, CA fabricant avec provenance et empreinte documentées.
+### P11 — TaHoma HTTP client and TLS validation
 
-**Produit :** `TahomaClient` et DTO du contrat ; client réutilisé, timeout 5 s, setup limité à 4 Mio.
+**Dependencies:** P10, P07, P03. **Files:** `integration-tahoma/src/{client,dto}.rs`, `integration-tahoma/tests/{http_contract,tls_contract}.rs`, manufacturer CA with documented provenance/fingerprint.
 
-- [ ] Tests : bon Bearer et CA → setup lu ; token invalide → erreur dédiée ; mauvaise CA/nom → échec ; redirection → aucun second hôte contacté.
-- [ ] Tests : variable de proxy système ignorée pour la box ; réponse trop grande/tronquée → erreur, pas de boucle ; champs supplémentaires tolérés.
-- [ ] Implémenter uniquement routes nécessaires à setup, événements et exécution ; utiliser les verbes officiels et encoder les segments d'URL.
-- [ ] Vérifier `cargo test -p integration-tahoma --test http_contract --test tls_contract` ; aucun token dans les captures de logs du test.
+**Produces:** contractual `TahomaClient`/DTOs; reused client, 5 s timeout, 4 MiB setup limit.
 
-### P12 — Mapping des volets/stores io
+- [ ] Tests: correct Bearer/CA → setup read; invalid token → dedicated error; wrong CA/name → failure; redirect → no second host contacted.
+- [ ] Tests: ignore system proxy variables for gateway; oversized/truncated response → error, no loop; tolerate extra fields.
+- [ ] Implement only setup/event/execution routes; use official verbs and encode URL segments.
+- [ ] Run `cargo test -p integration-tahoma --test http_contract --test tls_contract`; no tokens in captured test logs.
 
-**Dépendances :** P11. **Fichiers :** `integration-tahoma/src/mapping/{mod,covering_io}.rs`, `integration-tahoma/tests/covering_io.rs`.
+### P12 — io covering mapping
 
-**Produit :** `map_device` et `encode_command` pour les profils io inventoriés ; conventions du contrat.
+**Dependencies:** P11. **Files:** `integration-tahoma/src/mapping/{mod,covering_io}.rs`, `integration-tahoma/tests/covering_io.rs`.
 
-- [ ] Tests par profil réel anonymisé : fermé=0, ouvert=100, position 80, inverse si le profil fabricant l'impose ; aucun renversement global par supposition.
-- [ ] Vérifier qu'ouvrir/fermer/stop/position sont sélectionnés dans les commandes déclarées et que l'inclinaison n'est proposée que si réellement disponible.
-- [ ] Représenter les erreurs radio et états absents sans remplacer une mesure par la dernière consigne.
-- [ ] Vérifier `cargo test -p integration-tahoma --test covering_io` et les fixtures de projection communes.
+**Produces:** `map_device`/`encode_command` for inventoried io profiles, following contract conventions.
 
-### P13 — RTS et estimation explicite
+- [ ] Tests per anonymized real profile: closed=0, open=100, position 80, inversion only when required by manufacturer profile; no assumed global inversion.
+- [ ] Select open/close/stop/position from declared commands; offer tilt only when actually available.
+- [ ] Represent radio errors/missing state without substituting the last target for a measurement.
+- [ ] Run `cargo test -p integration-tahoma --test covering_io` and shared projection fixtures.
 
-**Dépendances :** P11, P12 pour l'intégration au dispatcher partagé. **Fichiers :** `integration-tahoma/src/mapping/covering_rts.rs`, `bridge-core/src/estimation.rs`, tests `covering_rts.rs` et `estimation_contract.rs` dans leurs packages.
+### P13 — RTS and explicit estimation
 
-**Produit :** actions RTS disponibles ; estimation uniquement après calibration par appareil.
+**Dependencies:** P11, P12 for shared-dispatcher integration. **Files:** `integration-tahoma/src/mapping/covering_rts.rs`, `bridge-core/src/estimation.rs`, `covering_rts.rs`/`estimation_contract.rs` tests in their packages.
 
-- [ ] `rts_without_feedback_is_unknown` : aucun état fabricant → position inconnue, pas 0/100 par défaut ; les commandes restent celles réellement supportées.
-- [ ] Sans calibration : refuser `SetPosition` si le matériel ne sait pas la réaliser ; conserver ouvrir/fermer/stop si déclarés.
-- [ ] Si la position intermédiaire est un usage existant, implémenter des durées montée/descente distinctes, horloge monotone, bornes et invalidation après reboot/rupture de suivi ; test avec temps simulé, aucun moteur.
-- [ ] `external_remote_invalidates_estimate` : événement ou incertitude de contrôle retire la confirmation ; l'UI explique la limite d'une télécommande non observable.
-- [ ] Vérifier `cargo test -p integration-tahoma --test covering_rts` et `cargo test -p bridge-core --test estimation_contract`.
+**Produces:** available RTS actions; estimates only after per-device calibration.
 
-**Clôture :** pas de déplacement automatique de calibration ; garder legacy si l'usage intermédiaire actuel ne peut pas être reproduit honnêtement.
+- [ ] `rts_without_feedback_is_unknown`: no manufacturer state → unknown position, not default 0/100; commands remain limited to actual support.
+- [ ] Without calibration, reject `SetPosition` if hardware cannot perform it; retain declared open/close/stop.
+- [ ] If intermediate position is an existing use case, implement separate up/down durations, monotonic clock, bounds, and invalidation after reboot/tracking loss; simulated-time tests, no motor.
+- [ ] `external_remote_invalidates_estimate`: events/control uncertainty remove confirmation; UI explains unobservable-remote limits.
+- [ ] Run `cargo test -p integration-tahoma --test covering_rts` and `cargo test -p bridge-core --test estimation_contract`.
 
-### P14 — Flux d'événements et réconciliation
+**Completion:** no automatic calibration movement; retain legacy if current intermediate-position use cannot be reproduced honestly.
 
-**Dépendances :** P11, P06. **Fichiers :** `integration-tahoma/src/events.rs`, `integration-tahoma/tests/events_contract.rs`.
+### P14 — Event stream and reconciliation
 
-**Produit :** `run_events(client: TahomaClient, store: Store, cancel: CancellationToken)` async, retour `Result<(), BridgeError>` ; disponibilité et instantanés cohérents, publication via le Store.
+**Dependencies:** P11, P06. **Files:** `integration-tahoma/src/events.rs`, `integration-tahoma/tests/events_contract.rs`.
 
-- [ ] Tests avec horloge simulée : une récupération/seconde maximum ; listener invalide/reboot → réinscription ; lectures en panne → backoff 1..30 s avec dispersion.
-- [ ] Tester trou entre setup et inscription : réconciliation récupère l'état ; appareil ajouté/supprimé/inconnu ne fait pas planter le flux.
-- [ ] Flux sain sans changement → état confirmé conservé ; flux défaillant >30 s → données périmées ; après reprise → refresh avant confirmation.
-- [ ] Vérifier `cargo test -p integration-tahoma --test events_contract` ; annulation libère le listener si accessible, sans bloquer l'arrêt plus de 10 s.
+**Produces:** async `run_events(client: TahomaClient, store: Store, cancel: CancellationToken)`, returning `Result<(), BridgeError>`; consistent availability/snapshots, Store publication.
 
-### P15 — Exécution fabricant et résultat incertain
+- [ ] Simulated-clock tests: maximum one fetch/second; invalid listener/reboot → register again; read failures → jittered 1..30 s backoff.
+- [ ] Test setup/registration gap: reconciliation recovers state; added/removed/unknown devices do not crash the stream.
+- [ ] Healthy unchanged stream retains confirmed state; failed stream >30 s → stale data; refresh before confirmation after recovery.
+- [ ] Run `cargo test -p integration-tahoma --test events_contract`; cancellation releases reachable listener without delaying shutdown beyond 10 s.
 
-**Dépendances :** P12, P13, P11. **Fichiers :** `integration-tahoma/src/commands.rs`, `integration-tahoma/tests/command_transport.rs`.
+### P15 — Manufacturer execution and uncertain outcomes
 
-**Produit :** `execute` et `execution` du contrat ; aucune relance automatique des POST.
+**Dependencies:** P12, P13, P11. **Files:** `integration-tahoma/src/commands.rs`, `integration-tahoma/tests/command_transport.rs`.
 
-- [ ] Test : le simulateur accepte le POST puis ferme la connexion → un seul envoi et résultat incertain ; jamais un nouvel essai implicite reqwest.
-- [ ] Tester refus fabricant, exécution échouée, réponse acceptée sans état physique et événement tardif ; le 200 HTTP seul ne produit pas `Succeeded`.
-- [ ] Mapper uniquement les résultats documentés/observés ; suivi borné à 120 s, expiration → `Unknown` si issue non prouvée.
-- [ ] Vérifier `cargo test -p integration-tahoma --test command_transport` ; paramètres sensibles expurgés.
+**Produces:** contractual `execute`/`execution`; no automatic POST retry.
 
-### P16 — Orchestration et santé du daemon
+- [ ] Simulator accepts POST then closes connection → one send/uncertain result; never an implicit reqwest retry.
+- [ ] Test manufacturer rejection, failed execution, acceptance without physical state, late event; HTTP 200 alone does not produce `Succeeded`.
+- [ ] Map only documented/observed results; tracking bounded to 120 s, then `Unknown` if outcome unproven.
+- [ ] Run `cargo test -p integration-tahoma --test command_transport`; redact sensitive parameters.
 
-**Dépendances :** P06–P09, P14. **Fichiers :** `bridge-server/src/{runtime,health,main}.rs`, `bridge-server/tests/lifecycle.rs`.
+### P16 — Daemon orchestration and health
 
-**Produit :** assemblage Store/connecteur/API, annulation partagée et état de santé.
+**Dependencies:** P06–P09, P14. **Files:** `bridge-server/src/{runtime,health,main}.rs`, `bridge-server/tests/lifecycle.rs`.
 
-- [ ] Tests : box absente au démarrage → API utilisable, ready=200 si stockage prêt et intégration dégradée ; base inutilisable → ready=503.
-- [ ] SIGTERM ferme admission, flux et worker en ≤10 s, y compris avec SSE ouvert et requête fabricant bloquée.
-- [ ] Démarrer un seul superviseur par intégration ; erreurs permanentes affichées sans redémarrage agressif.
-- [ ] Vérifier `cargo test -p bridge-server --test lifecycle` et que les tâches créées sont toutes suivies et annulées.
+**Produces:** Store/connector/API assembly, shared cancellation, health state.
 
-### P17 — Interface statique et contrat navigateur
+- [ ] Tests: missing gateway at startup → usable API, ready=200 if storage ready/integration degraded; unusable database → ready=503.
+- [ ] SIGTERM closes admission, stream, worker in ≤10 s, including open SSE and blocked manufacturer request.
+- [ ] One supervisor per integration; show permanent errors without aggressive restart.
+- [ ] Run `cargo test -p bridge-server --test lifecycle`; track/cancel every spawned task.
 
-**Dépendances :** P09. **Fichiers :** `web/package.json`, lockfile, configuration Svelte/Vite/TypeScript, `web/src/{App.svelte,lib/api.ts,lib/types.ts}`, `bridge-server/src/assets.rs`, tests frontend de lecture.
+### P17 — Static UI and browser contract
 
-**Produit :** build statique embarqué ; scripts npm nommés dans la section 1.
+**Dependencies:** P09. **Files:** `web/package.json`, lockfile, Svelte/Vite/TypeScript configuration, `web/src/{App.svelte,lib/api.ts,lib/types.ts}`, `bridge-server/src/assets.rs`, frontend read tests.
 
-- [ ] Consommer les exemples de `fixtures/api` ; tests de lecture d'instantané/erreur, affichage inconnu et absence de données sensibles.
-- [ ] Implémenter un client de même origine, cookies de session et transmission du CSRF ; pas de token dans localStorage.
-- [ ] Embarquer les assets compilés, servir les types MIME corrects et ne pas transformer une route `/api` inconnue en `index.html`.
-- [ ] Vérifier `npm ci`, `npm run check`, `npm test`, `npm run build` dans `web/`, puis test de service des assets par le binaire ; aucun Node pour servir la production.
+**Produces:** embedded static build; npm scripts from section 1.
 
-### P18 — Routeur unique des commandes et idempotence
+- [ ] Consume `fixtures/api` examples; tests for snapshot/error reading, unknown-state display, no sensitive data.
+- [ ] Same-origin client, session cookies, CSRF forwarding; no localStorage tokens.
+- [ ] Embed compiled assets, correct MIME types; unknown `/api` routes must not become `index.html`.
+- [ ] Run `npm ci`, `npm run check`, `npm test`, `npm run build` in `web/`, then binary asset-serving test; no Node for production serving.
 
-**Dépendances :** P15, P16. **Fichiers :** `bridge-core/src/command.rs`, `bridge-server/src/command_router.rs`, `bridge-server/src/api/commands.rs`, `bridge-server/tests/command_router.rs`.
+### P18 — Shared command router and idempotency
 
-**Produit :** `CommandRouter::submit` et routes de commandes du contrat ; `CommandEnvelope` pour HomeKit.
+**Dependencies:** P15, P16. **Files:** `bridge-core/src/command.rs`, `bridge-server/src/command_router.rs`, `bridge-server/src/api/commands.rs`, `bridge-server/tests/command_router.rs`.
 
-- [ ] Tests : native accepte ; observe/legacy refuse sans appel fabricant ; capacité/valeur invalide refuse ; appareil indisponible → 503.
-- [ ] Double request_id/contenu identique → même command_id et un envoi ; même ID/contenu différent →409 ; comportement conservé après reboot.
-- [ ] Queue=32 et une commande ordinaire active/appareil ; saturation →429, pas de tâche infinie ; attente >5 s → annulation avant transmission ; propriété revérifiée à cet instant.
-- [ ] `stop_interrupts_pending_position` et `stop_allowed_while_moving` : stop prioritaire, position non envoyée annulée ; une commande déjà envoyée n'est pas faussement déclarée annulée physiquement.
-- [ ] Test crash après admission puis après envoi : opérations incertaines en `Unknown`, aucun replay automatique ; vérifier `cargo test -p bridge-server --test command_router`.
+**Produces:** contractual `CommandRouter::submit`/command routes; `CommandEnvelope` for HomeKit.
 
-### P19 — SSE borné et clients lents
+- [ ] Tests: native accepts; observe/legacy rejects without manufacturer call; invalid capability/value rejected; unavailable device →503.
+- [ ] Duplicate request_id/identical content → same command_id/one send; same ID/different content →409; preserve across reboot.
+- [ ] Queue=32, one ordinary active command/device; saturation →429, no unbounded tasks; wait >5 s → cancel before transmission/recheck ownership then.
+- [ ] `stop_interrupts_pending_position`, `stop_allowed_while_moving`: priority stop, cancel unsent position; never falsely report a sent command physically cancelled.
+- [ ] Crash after admission/send: uncertain operations → `Unknown`, no automatic replay; run `cargo test -p bridge-server --test command_router`.
 
-**Dépendances :** P18. **Fichiers :** `bridge-server/src/api/events.rs`, `bridge-server/tests/sse_contract.rs`, `web/src/lib/events.ts` et tests associés.
+### P19 — Bounded SSE and slow clients
 
-**Produit :** événements du contrat, heartbeat 15 s, limite 16 clients.
+**Dependencies:** P18. **Files:** `bridge-server/src/api/events.rs`, `bridge-server/tests/sse_contract.rs`, `web/src/lib/events.ts`, associated tests.
 
-- [ ] Tests : client déconnecté puis reconnecté récupère un instantané ; retard de >256 événements → resync ; 17e client →429.
-- [ ] Notifications seulement après commit Store ; cookies/session obligatoires ; fermeture sur logout/expiration ou arrêt du serveur.
-- [ ] Vérifier `cargo test -p bridge-server --test sse_contract`, puis tests frontend avec déconnexion/reconnexion simulées ; aucune accumulation illimitée dans le navigateur.
+**Produces:** contractual events, 15 s heartbeat, 16-client limit.
 
-### P20 — Projection HomeKit indépendante du backend
+- [ ] Tests: disconnected/reconnected client gets snapshot; >256-event lag → resync; 17th client →429.
+- [ ] Notify only after Store commit; cookies/session required; close on logout/expiration/server shutdown.
+- [ ] Run `cargo test -p bridge-server --test sse_contract`, then frontend simulated disconnect/reconnect tests; no unbounded browser accumulation.
 
-**Dépendances :** P05, P06, P12, P13. **Fichiers :** `transport-homekit/src/projection.rs`, `transport-homekit/tests/projection_contract.rs`, `fixtures/homekit/*.json`.
+### P20 — Backend-independent HomeKit projection
 
-**Produit :** projection stable appareils/capacités → services/caractéristiques, consommateurs des UUID et AID/IID persistés.
+**Dependencies:** P05, P06, P12, P13. **Files:** `transport-homekit/src/projection.rs`, `transport-homekit/tests/projection_contract.rs`, `fixtures/homekit/*.json`.
 
-- [ ] Tests : seuls les appareils native publiés ; rename/restart/reorder gardent les identifiants ; 150e appareil derrière un pont → refus explicite ou groupe préalablement planifié.
-- [ ] Position inconnue → erreur de communication sur lecture plutôt que valeur inventée ; read/write permissions respectées ; read-only non modifiable.
-- [ ] Vérifier mappings fermé=0/ouvert=100 avec fixtures identiques aux couches API/Somfy, et resync après événement perdu.
-- [ ] Vérifier `cargo test -p transport-homekit --test projection_contract` ; aucun appel moteur par cette projection seule.
+**Produces:** stable devices/capabilities → services/characteristics projection consuming persistent UUIDs/AID/IID.
 
-### P21 — Backend HAP Rust, si approuvé
+- [ ] Tests: publish only native devices; rename/restart/reorder preserve IDs; 150th device behind a bridge → explicit rejection or previously planned group.
+- [ ] Unknown position → communication error on read instead of invented value; honor read/write permissions, no read-only modification.
+- [ ] Verify closed=0/open=100 with identical API/Somfy fixtures and resync after lost event.
+- [ ] Run `cargo test -p transport-homekit --test projection_contract`; projection alone never calls a motor.
 
-**Dépendances :** P04=`native-approved`, P20, P18, P19. **Fichiers :** `transport-homekit/src/{lib,native}.rs`, tests `native_contract.rs`, adaptations ciblées au fork HAP si nécessaires.
+### P21 — Rust HAP backend, if approved
 
-**Produit :** `transport_homekit::run` du contrat, raccordé au même routeur que le Web.
+**Dependencies:** P04=`native-approved`, P20, P18, P19. **Files:** `transport-homekit/src/{lib,native}.rs`, `native_contract.rs` tests, targeted HAP-fork adaptations if needed.
 
-- [ ] Reprendre les preuves P04 sous forme de tests de contrat, y compris persistance, révocation, notification et données hostiles ; utiliser l'API de la pile épinglée.
-- [ ] Toute écriture HomeKit devient un CommandRequest ; réponse rapide d'admission, résultat physique suivi séparément ; lectures depuis l'état mis en cache.
-- [ ] Vérifier `cargo test -p transport-homekit --test native_contract`, le workspace puis Apple Maison sur pont fictif.
+**Produces:** contractual `transport_homekit::run`, connected to the same router as Web.
 
-**Clôture :** version et correctifs HAP traçables ; aucune dépendance Node en profil natif.
+- [ ] Turn P04 evidence into contract tests including persistence, revocation, notifications, hostile data; use the pinned stack API.
+- [ ] Each HomeKit write becomes a CommandRequest; prompt admission response, separate physical-outcome tracking; reads use cached state.
+- [ ] Run `cargo test -p transport-homekit --test native_contract`, workspace checks, then Apple Home with a fictional bridge.
 
-### P22 — Repli HAP-NodeJS, seulement si nécessaire
+**Completion:** traceable HAP version/fixes; no Node dependency in native profile.
 
-**Dépendances :** P04=`sidecar-required`, P20, P18, P19. **Fichiers :** `compat/hap-node/{package.json,package-lock.json,src/index.ts}`, `transport-homekit/src/sidecar.rs`, tests `sidecar_contract.rs`, profil Compose correspondant.
+### P22 — HAP-NodeJS fallback, only if necessary
 
-**Produit :** même interface `run`, protocole interne JSON-lines version 1 sur Unix socket privé ; aucun port interne public.
+**Dependencies:** P04=`sidecar-required`, P20, P18, P19. **Files:** `compat/hap-node/{package.json,package-lock.json,src/index.ts}`, `transport-homekit/src/sidecar.rs`, `sidecar_contract.rs` tests, corresponding Compose profile.
 
-- [ ] Figer Node/HAP-NodeJS compatibles depuis la documentation courante ; aucun installateur ou chargement de plugins npm au runtime.
-- [ ] Messages bornés à 256 Kio : `snapshot`, `state_update`, `command_request`, `command_reply`, `health` ; request_id identique jusqu'au routeur ; socket et persistance privés.
-- [ ] Tester crash du sidecar, reconnexion et resync ; commandes en vol inconnues sans replay ; superviser avec backoff borné et statut visible.
-- [ ] Vérifier les mêmes projections que P21, tests Node et `cargo test -p transport-homekit --test sidecar_contract` ; mesurer les deux processus ensemble.
+**Produces:** same `run` interface, internal JSON-lines v1 protocol over a private Unix socket; no public internal port.
 
-**Clôture :** profil nommé « hybride » ; pas de prétention de compatibilité des plugins par cette couche.
+- [ ] Pin compatible Node/HAP-NodeJS from current docs; no npm plugin installer/loading at runtime.
+- [ ] Bound messages to 256 KiB: `snapshot`, `state_update`, `command_request`, `command_reply`, `health`; same request_id through router; private socket/persistence.
+- [ ] Test sidecar crash/reconnect/resync; unknown in-flight commands, no replay; bounded-backoff supervision and visible state.
+- [ ] Verify same projections as P21, Node tests, `cargo test -p transport-homekit --test sidecar_contract`; measure both processes together.
 
-### P23 — UI de connexion et de configuration TaHoma
+**Completion:** profile named hybrid; no claim of plugin compatibility through this layer.
 
-**Dépendances :** P17, P11, P08. **Fichiers :** `web/src/pages/{Setup,Login,Integrations}.svelte`, `web/tests/setup.spec.ts`.
+### P23 — Login and TaHoma setup UI
 
-**Produit :** parcours premier compte → connexion → test TaHoma → lecture d'inventaire en observation.
+**Dependencies:** P17, P11, P08. **Files:** `web/src/pages/{Setup,Login,Integrations}.svelte`, `web/tests/setup.spec.ts`.
 
-- [ ] E2E : mauvais token/CA affiche une erreur utile, aucun token réaffiché ; succès affiche les appareils, sans commande ni publication automatique.
-- [ ] Champs accessibles, langue française, collage du token possible ; prévenir l'utilisateur avant de quitter un formulaire non enregistré.
-- [ ] Vérifier `npm run check`, tests ciblés, `npm run test:e2e -- setup.spec.ts` sur simulateur HTTPS ; aucun équipement réel.
+**Produces:** first account → login → TaHoma test → observe-mode inventory reading.
 
-### P24 — UI appareils et commandes
+- [ ] E2E: wrong token/CA shows useful error, never redisplays token; success lists devices without automatic commands/publication.
+- [ ] Accessible fields, French UI, token paste supported; warn before leaving an unsaved form.
+- [ ] Run `npm run check`, targeted tests, `npm run test:e2e -- setup.spec.ts` on HTTPS simulator; no real equipment.
 
-**Dépendances :** P23, P18, P19. **Fichiers :** `web/src/pages/Devices.svelte`, `web/src/components/{DeviceCard,CommandStatus}.svelte`, `web/tests/devices.spec.ts`.
+### P24 — Devices and commands UI
 
-**Produit :** contrôles déterminés par les capacités, propriété et disponibilité ; état d'exécution distinct de l'état physique.
+**Dependencies:** P23, P18, P19. **Files:** `web/src/pages/Devices.svelte`, `web/src/components/{DeviceCard,CommandStatus}.svelte`, `web/tests/devices.spec.ts`.
 
-- [ ] E2E : native peut commander, observe/legacy ne le peut pas ; états inconnus/périmés/estimés identifiables par texte, pas seulement couleur.
-- [ ] Double clic utilise le même request_id pendant l'admission ; nouvelle action volontaire obtient un nouvel ID ; erreur réseau n'entraîne pas de réémission automatique.
-- [ ] Afficher calibration RTS et ses limites seulement pour les profils concernés ; aucune calibration physique automatique.
-- [ ] Vérifier `npm run test:e2e -- devices.spec.ts`, navigation clavier et vue mobile ; tests du composant état pour absence de feedback.
+**Produces:** controls determined by capabilities/ownership/availability; execution state separate from physical state.
 
-### P25 — UI HomeKit, paramètres et diagnostics
+- [ ] E2E: native commands allowed, observe/legacy blocked; unknown/stale/estimated states identified by text, not color alone.
+- [ ] Double-click reuses request_id during admission; new intentional action gets new ID; network errors never cause automatic retransmission.
+- [ ] Show RTS calibration/limits only for relevant profiles; no automatic physical calibration.
+- [ ] Run `npm run test:e2e -- devices.spec.ts`, keyboard/mobile checks, and no-feedback state-component tests.
 
-**Dépendances :** P24, P20, P21 ou P22. **Fichiers :** pages `HomeKit.svelte`, `Settings.svelte`, `Diagnostics.svelte`, `web/tests/administration.spec.ts`, routes correspondantes `bridge-server/src/api/`.
+### P25 — HomeKit, settings, diagnostics UI
 
-**Produit :** backend actif, appairage restreint, métriques du service, logs expurgés et liens d'administration legacy.
+**Dependencies:** P24, P20, P21 or P22. **Files:** `HomeKit.svelte`, `Settings.svelte`, `Diagnostics.svelte`, `web/tests/administration.spec.ts`, corresponding `bridge-server/src/api/` routes.
 
-- [ ] Tests : QR/PIN absent sans session, no-store, jamais dans logs ; 500 lignes maximum et troncature des messages géants.
-- [ ] Afficher RSS du produit et la limite de cette métrique ; ne pas présenter la RAM libre du NAS comme mémoire consommée par le produit.
-- [ ] Pas de bouton de mise à jour improvisant un shell ; fournir instructions adaptées au mode d'installation et lien de sauvegarde.
-- [ ] Vérifier les routes par tests HTTP et `npm run test:e2e -- administration.spec.ts`.
+**Produces:** active backend, restricted pairing, service metrics, redacted logs, legacy administration links.
 
-### P26 — Sauvegarde et restauration sûres
+- [ ] Tests: no QR/PIN without session, no-store, never logged; maximum 500 lines and giant-message truncation.
+- [ ] Show product RSS and its limits; do not describe NAS free RAM as product consumption.
+- [ ] No update button improvising shell commands; provide installation-specific instructions and backup link.
+- [ ] Verify routes with HTTP tests and `npm run test:e2e -- administration.spec.ts`.
 
-**Dépendances :** P06, P07, P08. **Fichiers :** `bridge-core/src/backup.rs`, `bridge-server/src/cli/backup.rs`, `bridge-server/src/api/backups.rs`, `bridge-core/tests/backup_contract.rs`, `docs/operations/backup.md`.
+### P26 — Safe backup and restoration
 
-**Produit :** manifeste versionné, sauvegarde cohérente SQLite et validation Web ; application par CLI locale service arrêté.
+**Dependencies:** P06, P07, P08. **Files:** `bridge-core/src/backup.rs`, `bridge-server/src/cli/backup.rs`, `bridge-server/src/api/backups.rs`, `bridge-core/tests/backup_contract.rs`, `docs/operations/backup.md`.
 
-- [ ] Tests : restaurer une sauvegarde complète conserve identités et appairages propres au nouveau produit ; sauvegarde Web exclut sessions/secrets et liste les éléments à ressaisir.
-- [ ] Rejeter path traversal, liens symboliques, archive-bombe, checksum faux, >1 000 entrées, >50 Mio compressés/>200 Mio extraits et schéma futur.
-- [ ] Valider dans répertoire temporaire, sauvegarder l'état précédent et remplacer atomiquement ; injection d'échec → ancien état encore utilisable.
-- [ ] Vérifier `cargo test -p bridge-core --test backup_contract` et cycle CLI sur répertoire temporaire ; jamais sur l'installation Homebridge actuelle.
+**Produces:** versioned manifest, consistent SQLite backup, Web validation; apply through local CLI while stopped.
 
-### P27 — Image Docker et Compose pour QNAP
+- [ ] Tests: full restore preserves the new product's identities/pairings; Web backup excludes sessions/secrets and lists values to reenter.
+- [ ] Reject traversal, symlinks, archive bombs, bad checksums, >1,000 entries, >50 MiB compressed/>200 MiB extracted, future schemas.
+- [ ] Validate in temporary directory, back up prior state, replace atomically; failure injection leaves old state usable.
+- [ ] Run `cargo test -p bridge-core --test backup_contract` and a temporary-directory CLI cycle; never use current Homebridge installation.
 
-**Dépendances :** P25, P26, backend retenu opérationnel. **Fichiers :** `packaging/docker/Dockerfile`, `compose.yaml`, `compose.hybrid.yaml` si requis, `.dockerignore`, `docs/install/docker-qnap.md`, `tests/packaging/docker-smoke.sh`.
+### P27 — Docker image and Compose for QNAP
 
-**Produit :** image sans compilation runtime, volume `/data`, user configurable, réseau host Linux et healthcheck interne.
+**Dependencies:** P25, P26, selected backend operational. **Files:** `packaging/docker/Dockerfile`, `compose.yaml`, `compose.hybrid.yaml` if needed, `.dockerignore`, `docs/install/docker-qnap.md`, `tests/packaging/docker-smoke.sh`.
 
-- [ ] Smoke : read-only root, cap-drop ALL, aucun privileged/socket Docker ; persistance après recréation, SIGTERM ≤10 s, box hors ligne ne déclenche pas d'échec live.
-- [ ] `docker compose config` valide ; pas de `ports:` avec host ; écoute UI explicite et ports HAP libres.
-- [ ] Construire et exécuter amd64 ; exécuter aussi arm64 sur runner natif ou émulation identifiée comme telle ; ne pas appeler cela un test NAS arm64.
-- [ ] Décrire installation Container Station compatible avec la version QTS relevée au P03, permissions de dossier et reverse proxy HTTPS.
-- [ ] Vérifier `sh -n tests/packaging/docker-smoke.sh` puis smoke sur environnement de test ; pas de déploiement automatique sur le NAS de production.
+**Produces:** image without runtime compilation, `/data` volume, configurable user, Linux host networking, internal healthcheck.
 
-### P28 — Archive native compatible J1900
+- [ ] Smoke: read-only root, cap-drop ALL, no privileged/Docker socket; persistence after recreation, SIGTERM ≤10 s, offline gateway does not fail live health.
+- [ ] Valid `docker compose config`; no `ports:` with host networking; explicit UI binding/free HAP ports.
+- [ ] Build/run amd64; also run arm64 on native runner or explicitly identified emulation, not claimed as an arm64 NAS test.
+- [ ] Document Container Station installation compatible with P03 QTS version, directory permissions, HTTPS reverse proxy.
+- [ ] Run `sh -n tests/packaging/docker-smoke.sh`, then smoke in test environment; no automatic production NAS deployment.
 
-**Dépendances :** P27. **Fichiers :** `packaging/native/build.sh`, `packaging/native/README.md`, `tests/packaging/native-smoke.sh`, configurations de cibles nécessaires.
+### P28 — J1900-compatible native archive
 
-**Produit :** archive `linux-x86_64` générique, UI embarquée et sommes SHA-256 ; archive arm64 secondaire si CI disponible.
+**Dependencies:** P27. **Files:** `packaging/native/build.sh`, `packaging/native/README.md`, `tests/packaging/native-smoke.sh`, necessary target configurations.
 
-- [ ] Vérifier libc/noyau/crypto/résolution multicast ; comparer musl et glibc sur la cible, sélectionner une variante documentée qui fonctionne sur QTS.
-- [ ] Tests : aucun `target-cpu=native`, `--version`, `check`, `serve --simulate`, stockage persistant et arrêt propre sans Node/npm/Rust installés sur l'hôte de test.
-- [ ] Smoke réel sur J1900 avant annonce compatible ; erreur claire si instructions ou noyau incompatibles, jamais un binaire seulement testé sur le Mac du développeur.
-- [ ] Vérifier syntaxe shell, artefact, checksum et protocole d'arrêt ; installer seulement dans un répertoire isolé pour l'essai.
+**Produces:** generic `linux-x86_64` archive, embedded UI, SHA-256 checksums; secondary arm64 archive if CI available.
 
-### P29 — Paquet QNAP `.qpkg`
+- [ ] Check libc/kernel/crypto/multicast resolution; compare musl/glibc on target and document a QTS-working variant.
+- [ ] Tests: no `target-cpu=native`, `--version`, `check`, `serve --simulate`, persistent storage, clean shutdown without Node/npm/Rust installed on test host.
+- [ ] Real J1900 smoke before compatibility claim; clear error for incompatible instructions/kernel, never a binary tested only on the developer's Mac.
+- [ ] Check shell syntax, artifact, checksum, shutdown protocol; install only in an isolated test directory.
 
-**Dépendances :** P28, version QTS P03. **Fichiers :** `packaging/qnap/{qpkg.cfg,package_routines,shared/homebridge-rust.sh}`, script de build, `tests/packaging/qpkg_service.sh`, `docs/install/qpkg.md`.
+### P29 — QNAP `.qpkg` package
 
-**Produit :** paquet QDK x86_64 avec start/stop/restart/status, données hors du répertoire remplacé en mise à jour.
+**Dependencies:** P28, QTS version from P03. **Files:** `packaging/qnap/{qpkg.cfg,package_routines,shared/homebridge-rust.sh}`, build script, `tests/packaging/qpkg_service.sh`, `docs/install/qpkg.md`.
 
-- [ ] Lire la documentation QDK courante, figer sa version ; ne pas utiliser les chemins de volumes du développeur dans le paquet.
-- [ ] Test simulé du service : start deux fois → un processus ; PID réutilisé → ne pas tuer un autre programme ; stop attend et gère un daemon bloqué sans détruire les données.
-- [ ] Tester installation, upgrade, désactivation, reboot et désinstallation sur QTS de test ou avec le propriétaire ; données conservées et règle de suppression explicite.
-- [ ] Installation privilégiée minimale puis daemon sous compte de service ; droits et propriétaire `/data` vérifiés.
-- [ ] Vérifier `sh -n` et `sh tests/packaging/qpkg_service.sh`, métadonnées QDK et artefact réel. Documenter signature/approbation App Center ; ne pas désactiver automatiquement les protections du NAS.
+**Produces:** QDK x86_64 package with start/stop/restart/status, data outside directories replaced during upgrade.
 
-**Clôture :** installation manuelle simple démontrée sur TS-251+ ; aucune promesse d'inscription automatique au catalogue QNAP.
+- [ ] Read current QDK docs/pin version; no developer volume paths in package.
+- [ ] Simulated service: start twice → one process; reused PID → do not kill another program; stop waits/handles a stuck daemon without destroying data.
+- [ ] Test install/upgrade/disable/reboot/uninstall on test QTS or with owner; retain data and explicit deletion rules.
+- [ ] Minimum privileged installation, then daemon under service account; verify `/data` permissions/ownership.
+- [ ] Verify `sh -n`, `sh tests/packaging/qpkg_service.sh`, QDK metadata, real artifact. Document signing/App Center approval; never automatically disable NAS protections.
 
-### P30 — CI de publication et traçabilité
+**Completion:** simple manual installation demonstrated on TS-251+; no promise of automatic QNAP catalog listing.
 
-**Dépendances :** P27–P29. **Fichiers :** `.github/workflows/{check,release}.yml`, `docs/release.md`, `CHANGELOG.md`.
+### P30 — Release CI and traceability
 
-**Produit :** tests PR, builds Docker multiarch et archive/QPKG, notes, licences, checksums et nomenclature de composants.
+**Dependencies:** P27–P29. **Files:** `.github/workflows/{check,release}.yml`, `docs/release.md`, `CHANGELOG.md`.
 
-- [ ] Les PR exécutent tests et builds sans publication ni secret disponible aux forks ; permissions GitHub minimales.
-- [ ] Sur tag approuvé, publier version immuable et digest GHCR ; vérifier réellement l'accès anonyme à l'image, un dépôt public ne suffit pas à garantir un package GHCR public.
-- [ ] Inclure dépendances et licences (Homebridge/HAP-NodeJS Apache-2.0, UI MIT au moment de la recherche) et les obligations des composants redistribués ; aucune réutilisation du logo comme marque officielle.
-- [ ] Valider workflow sur version de test ; pas de release « stable » avant P37. Les credentials de signature restent hors dépôt.
+**Produces:** PR tests, multiarch Docker/archive/QPKG builds, notes, licenses, checksums, component inventory.
 
-### P31 — Mesures comparables et endurance simulée
+- [ ] PRs run tests/builds without publication or secrets available to forks; minimal GitHub permissions.
+- [ ] Approved tag publishes immutable GHCR version/digest; actually verify anonymous access, since public repository does not guarantee public GHCR package.
+- [ ] Include dependencies/licenses (Homebridge/HAP-NodeJS Apache-2.0, UI MIT at research time) and redistributed-component obligations; no logo reuse as official branding.
+- [ ] Validate workflow with test version; no stable release before P37. Signing credentials remain outside repository.
 
-**Dépendances :** P30, P03, backend retenu. **Fichiers :** `tests/performance/`, `docs/performance-results.md`, résultats anonymisés.
+### P31 — Comparable measurements and simulated endurance
 
-**Produit :** rapport reproductible avec versions, hardware et périmètre exact.
+**Dependencies:** P30, P03, selected backend. **Files:** `tests/performance/`, `docs/performance-results.md`, anonymized results.
 
-- [ ] Scénarios 50/100 appareils : repos, rafale d'états, 5 clients/1 000 lectures, client lent, reconnexions et taille maximale des files.
-- [ ] Rapporter RSS/PSS, cgroup séparé, CPU, p95 API/admission, démarrage et pic mémoire ; inclure sidecar et legacy requis.
-- [ ] Endurance 72 h : pas de crash, tâches/fichiers stables, plateau mémoire et dérive <10 % selon l'architecture.
-- [ ] Comparer aux cibles : 64/128 Mio de RSS natif, gain domestique de 50 % proposé ; si échec, profiler le point mesuré et créer une correction ciblée.
+**Produces:** reproducible report with versions, hardware, exact scope.
 
-**Clôture :** mesures brutes conservées localement, résumé public sans topologie ni noms ; aucune revendication de gain non mesuré.
+- [ ] 50/100-device scenarios: idle, state burst, 5 clients/1,000 reads, slow client, reconnects, maximum queue sizes.
+- [ ] Report RSS/PSS, separate cgroup metrics, CPU, API/admission p95, startup, memory peak; include required sidecar/legacy.
+- [ ] 72 h endurance: no crash, stable task/file counts, memory plateau/drift <10% per architecture.
+- [ ] Compare targets: 64/128 MiB native RSS, proposed 50% household gain; if missed, profile the measured bottleneck and create a focused fix.
 
-### P32 — Migration observée et rollback vérifié
+**Completion:** raw measurements kept locally, public summary without topology/names; no unmeasured gain claim.
 
-**Dépendances :** P31, P26, P03. **Fichiers :** `bridge-server/src/api/ownership.rs`, `docs/operations/{migration,rollback}.md`, `bridge-server/tests/ownership_migration.rs`, UI migration.
+### P32 — Observed migration and verified rollback
 
-**Produit :** passage d'état protégé par expected_revision et checklist de bascule ; aucune modification distante automatique de Homebridge.
+**Dependencies:** P31, P26, P03. **Files:** `bridge-server/src/api/ownership.rs`, `docs/operations/{migration,rollback}.md`, `bridge-server/tests/ownership_migration.rs`, migration UI.
 
-- [ ] Tester transition legacy→observe→native avec révision correcte ; conflit →409 ; revenir observe coupe admission et publication sans effacer identités.
-- [ ] Après changement de propriété, réconcilier HomeKit et UI et annuler les commandes non envoyées ; une commande déjà transmise est rapportée incertaine si son issue n'est plus suivie. Tester le changement de propriété pendant l'attente en file.
-- [ ] Vérifier sur simulateur le retour à une ancienne version avec sauvegarde compatible, et le refus de lire silencieusement un schéma futur.
-- [ ] Répéter le rollback sur un pont de test ; documenter les limites de récupération des pièces/scènes/appairages Apple.
+**Produces:** expected_revision-protected transition and migration checklist; no automatic remote Homebridge changes.
 
-### P33 — Porte de garage Somfy, lot requis
+- [ ] Test legacy→observe→native with correct revision; conflict →409; reverting to observe stops admission/publication without erasing IDs.
+- [ ] After ownership change, reconcile HomeKit/UI and cancel unsent commands; sent commands become uncertain if no longer tracked. Test ownership changes while queued.
+- [ ] Simulate rollback to an old version with compatible backup and reject silently reading a future schema.
+- [ ] Rehearse rollback on a test bridge; document Apple room/scene/pairing recovery limits.
 
-**Dépendances :** P03, P18, P20, P24 ; contrôle humain avant test physique. **Fichiers :** `integration-tahoma/src/mapping/garage.rs`, tests `garage_contract.rs`, projection `transport-homekit/src/projection.rs`, composant UI, `docs/compatibility/garage.md`.
+### P33 — Somfy garage door, required work
 
-**Consomme :** modèle exact, liste des commandes et états/obstacle disponibles, nature io ou RTS, configuration cyclique du plugin actuel. **Produit :** mode de contrôle honnête et équivalent à l'usage validé.
+**Dependencies:** P03, P18, P20, P24; human supervision before physical tests. **Files:** `integration-tahoma/src/mapping/garage.rs`, `garage_contract.rs` tests, `transport-homekit/src/projection.rs`, UI component, `docs/compatibility/garage.md`.
 
-- [ ] Sous-tâche qualification : tableau commande déclarée → effet, état → preuve physique ; observer sans actionner. Si seules des impulsions existent, ne pas coder des commandes ouvrir/fermer déterministes.
-- [ ] Tests `unknown_is_not_closed`, `no_fake_obstruction`, `cyclic_is_not_open_close`, `no_replay_after_timeout` ; aucune inférence de fermeture d'après une durée.
-- [ ] Cas A : états/sécurités suffisants → GarageDoorOpener, lectures et commandes validées. Cas B : boutons momentanés distincts seulement s'ils sont prouvés et acceptés ; affichage « état inconnu ». Cas C : conserver legacy et préciser capteur ou API manquant.
-- [ ] Vérifier tests connecteur, cœur, projection et UI ; la simulation ne vaut pas validation de la sécurité mécanique.
-- [ ] Avec le propriétaire, valider commande depuis Maison, télécommande, arrêt/obstacle selon procédure constructeur et perte réseau ; aucun essai d'obstacle improvisé.
+**Consumes:** exact model, commands, available state/obstruction feedback, io/RTS type, current plugin cyclic configuration. **Produces:** honest control equivalent to the accepted use case.
 
-**Clôture :** acceptation écrite du profil ; le ticket ne devient pas « natif terminé » si le garage reste legacy.
+- [ ] Qualification subtask: declared command → effect, state → physical evidence; observe without operating. If only pulses exist, do not implement deterministic open/close commands.
+- [ ] `unknown_is_not_closed`, `no_fake_obstruction`, `cyclic_is_not_open_close`, `no_replay_after_timeout`; never infer closure from elapsed time.
+- [ ] Case A: sufficient state/safety → validated GarageDoorOpener reads/commands. Case B: distinct momentary buttons only when proven/accepted, unknown-state display. Case C: retain legacy and identify missing sensor/API.
+- [ ] Verify connector/core/projection/UI tests; simulation does not validate mechanical safety.
+- [ ] With owner, validate Apple Home/remote control, stop/obstruction using manufacturer procedure, network loss; no improvised obstruction tests.
 
-### P34 — Deux thermostats, lot requis
+**Completion:** written profile acceptance; not natively complete while garage remains legacy.
 
-**Dépendances :** P03, P18, P20, P24. **Fichiers :** `integration-tahoma/src/mapping/heating.rs`, tests `heating_contract.rs`, projection et UI chauffage, `docs/compatibility/heating.md`.
+### P34 — Two thermostats, required work
 
-**Produit :** fonctions effectivement utilisées sur les deux profils de chauffage, sans température fictive.
+**Dependencies:** P03, P18, P20, P24. **Files:** `integration-tahoma/src/mapping/heating.rs`, `heating_contract.rs` tests, heating projection/UI, `docs/compatibility/heating.md`.
 
-- [ ] Qualifier thermostat réel, radiateur à fil pilote ou mode seul ; relever consignes, modes, bornes, capteur éventuel et durées de dérogation.
-- [ ] Tests : absence de capteur → température inconnue ; borne/quantum invalide rejeté ; mode non déclaré refusé ; changement depuis TaHoma répercuté.
-- [ ] Si modes nécessaires hors `SetSetpoint`, étendre explicitement le contrat avec l'enum minimale des modes réellement observés et mettre à jour routeur, API, UI, HomeKit et fixtures dans le même lot.
-- [ ] Vérifier tests du mapping, projection et E2E ; contrôler le résultat réel avec le propriétaire sans modifier les programmes de chauffage existants.
+**Produces:** functions actually used on both heating profiles, without fictitious temperature.
 
-**Clôture :** deux appareils couverts ou limite documentée avec maintien legacy ; aucun faux 0 °C pour remplir un champ HomeKit obligatoire.
+- [ ] Qualify actual thermostat, pilot-wire radiator, or mode-only device; collect setpoints/modes/bounds/sensor/override durations.
+- [ ] Tests: missing sensor → unknown temperature; invalid bounds/step rejected; undeclared mode refused; TaHoma changes propagated.
+- [ ] If modes beyond `SetSetpoint` are needed, explicitly extend contract with the minimum enum of actually observed modes; update router/API/UI/HomeKit/fixtures together.
+- [ ] Verify mapping/projection/E2E; check real outcome with owner without modifying existing heating programs.
 
-### P35 — Neuf Switch et scénarios, lot requis
+**Completion:** two devices covered or documented limit with legacy retained; no fake 0 °C to fill mandatory HomeKit fields.
 
-**Dépendances :** P03, P18, P20, P24 ; ne pas supposer que les Switch sont physiques. **Fichiers :** `docs/compatibility/actions.md`, fixtures dédiées et fichiers de modèle/API/UI uniquement selon le profil retenu.
+### P35 — Nine Switch elements and scenarios, required work
 
-**Produit :** neuf lignes avec effet, dépendances, voie de commande, résultat et couverture.
+**Dependencies:** P03, P18, P20, P24; do not assume Switch elements are physical. **Files:** `docs/compatibility/actions.md`, dedicated fixtures, model/API/UI files only as required by selected profile.
 
-- [ ] Qualifier chaque Switch : scénario TaHoma, groupe de commandes, équipement physique ou autre ; noter fermetures, chauffage et garage potentiellement inclus.
-- [ ] Chercher une API locale de scénarios uniquement dans les sources officielles et sur le firmware présent ; ne pas coder des endpoints devinés ou un succès simulé.
-- [ ] Si un scénario est un groupe statique entièrement connu, proposer un groupe local minimal réutilisant CommandRouter ; définir `ActionGroup`, résultat par action, échec partiel et limites, puis mettre à jour les contrats avant code. Une exécution n'est jamais déclarée atomique.
-- [ ] Si un scénario dépend de logique/horaires fabricant ou d'une API non couverte, garder son Switch sur Homebridge ; ne pas recréer un moteur d'automatisation implicite.
-- [ ] Tests : groupe partiellement refusé → rapport partiel, aucune compensation physique automatique ; retry réseau ne déclenche pas deux fois ; une action garage respecte P33.
+**Produces:** nine rows with effect, dependencies, command path, result, coverage.
 
-**Clôture :** chaque usage fonctionne ; remplacement natif ou maintien legacy clairement séparés. P38 reste bloqué tant qu'un usage exige legacy.
+- [ ] Qualify each Switch as TaHoma scenario, command group, physical device, or other; record included closures/heating/garage.
+- [ ] Look for a local scenario API only in official sources/on installed firmware; no guessed endpoints or simulated success.
+- [ ] For a fully known static group, propose a minimal local group reusing CommandRouter; define `ActionGroup`, per-action result, partial failure, limits, and update contracts before code. Never claim atomic execution.
+- [ ] For manufacturer logic/schedules or uncovered API, retain the Homebridge Switch; do not implicitly recreate an automation engine.
+- [ ] Tests: partially rejected group → partial report, no automatic physical compensation; network retry never triggers twice; garage actions respect P33.
 
-### P36 — Autres usages et protocole d'ajout d'intégration
+**Completion:** every use case works; distinguish native replacement from legacy retention. P38 stays blocked while any use requires legacy.
 
-**Dépendances :** inventaire P03 et validation du propriétaire si usage nouveau. **Fichiers :** `docs/compatibility.md`, ticket par famille découverte.
+### P36 — Other uses and integration-addition protocol
 
-**Produit :** couverture exhaustive, sans ajouter préventivement tous les protocoles domotiques.
+**Dependencies:** P03 inventory and owner validation for new use cases. **Files:** `docs/compatibility.md`, one ticket per discovered family.
 
-- [ ] Vérifier si un autre plugin, une caméra, Matter, un capteur ou une automatisation est utilisé hors des 23 éléments visibles ; absence documentée = tâche sans code.
-- [ ] Pour chaque besoin réel : capturer une fixture anonyme, fixer capacités/commandes/erreurs, écrire tests de contrat, implémenter le connecteur minimal, valider UI/HomeKit et matériel, définir rollback.
-- [ ] Un ticket doit nommer ses fichiers, interfaces et tests avant affectation à Luna ; ne pas affecter « supporter Zigbee » sans coordinateur et appareils précis.
+**Produces:** exhaustive coverage without proactively adding all home-automation protocols.
 
-**Clôture :** aucune ligne d'inventaire sans propriétaire et chemin fonctionnel ; le périmètre peut rester à 23 si confirmé.
+- [ ] Check other plugins, cameras, Matter, sensors, automations outside the 23 visible elements; documented absence → no-code task.
+- [ ] For every actual need: capture anonymous fixture, define capabilities/commands/errors, contract tests, minimum connector, UI/HomeKit/hardware validation, rollback.
+- [ ] Name files/interfaces/tests before assigning a ticket to Luna; do not assign generic Zigbee support without a specific coordinator/devices.
 
-### P37 — Acceptation sur le QNAP et essai domestique
+**Completion:** no inventory row without an owner/working path; scope may remain 23 if confirmed.
 
-**Dépendances :** P32–P36, backend retenu, Docker et QPKG P27/P29 ; fenêtre convenue avec le propriétaire. **Fichiers :** `docs/acceptance.md`, rapport détaillé privé si nécessaire.
+### P37 — QNAP acceptance and household trial
 
-- [ ] Installer en observation sur volume/ports distincts ; au moins 24 h de comparaison, sans toucher à la publication actuelle.
-- [ ] Pilote d'un volet io puis RTS si présents, enfin chauffage/garage/actions après validation de leurs lots ; noter tout réappairage et automatisme reconstruit.
-- [ ] Tester app Maison/Siri, télécommande murale, perte Internet, perte LAN, reboot box, reboot QNAP et arrêt application ; aucun replay de commande.
-- [ ] Démontrer installation/upgrade/arrêt Docker et QPKG sur la version QTS réelle ; une seule instance possède chaque équipement.
-- [ ] Observer 72 h après la dernière modification de code/configuration pertinente ; comparaison mémoire sur la même charge, inclure tout processus conservé.
-- [ ] Consigner bugs et résultat par usage ; rejouer les scénarios affectés après correction, puis revalider l'endurance si le changement impacte les ressources ou la fiabilité.
+**Dependencies:** P32–P36, selected backend, Docker/QPKG P27/P29; owner-agreed window. **Files:** `docs/acceptance.md`, private detailed report if needed.
 
-**Clôture :** tous les usages inventoriés conservés, rollback éprouvé, limites annoncées ; release beta possible, « entièrement natif » seulement si P38 réussi.
+- [ ] Install in observe mode on distinct volume/ports; compare for at least 24 h without touching current publication.
+- [ ] Pilot io then RTS if present, followed by heating/garage/actions after their work is validated; record re-pairing/rebuilt automations.
+- [ ] Test Apple Home/Siri, wall remote, Internet loss, LAN loss, gateway reboot, QNAP reboot, application stop; no command replay.
+- [ ] Demonstrate Docker/QPKG install/upgrade/stop on actual QTS; only one instance owns each device.
+- [ ] Observe 72 h after the last relevant code/config change; compare memory under identical load, including all retained processes.
+- [ ] Record bugs/results per use case; rerun affected scenarios after fixes, then revalidate endurance if resources/reliability are affected.
 
-### P38 — Suppression progressive du legacy et édition tout Rust
+**Completion:** all inventoried uses retained, proven rollback, disclosed limits; beta release possible, all-native claim only after successful P38.
 
-**Dépendances :** P37, toutes les lignes nécessaires natives et transport HAP natif validé. **Fichiers :** `docs/compatibility.md`, `docs/performance-results.md`, packaging et notes de version.
+### P38 — Gradual legacy removal and all-Rust edition
 
-- [ ] Vérifier zéro dépendance résiduelle aux 9 Switch, 2 thermostats, garage, volets et usages P36 ; une seule ligne legacy empêche le retrait de son plugin.
-- [ ] Sauvegarder et désactiver les chemins historiques par groupe avec le propriétaire ; conserver une procédure de retour et l'archive privée.
-- [ ] Si le sidecar HAP existe encore, ouvrir une reprise P04/P21 chiffrée : sa présence empêche l'étiquette « tout Rust », même si toutes les intégrations sont natives.
-- [ ] Mesurer l'installation finale et publier les gains réels ; retirer les dépendances non utilisées du profil natif sans casser le profil hybride encore proposé.
-- [ ] Tag stable uniquement après acceptation du périmètre couvert ; ne pas déclarer la compatibilité universelle avec l'écosystème Homebridge.
+**Dependencies:** P37, all necessary rows native, validated native HAP transport. **Files:** `docs/compatibility.md`, `docs/performance-results.md`, packaging, release notes.
 
-## 4. Organisation des sessions Luna
+- [ ] Verify zero residual dependency on nine Switch elements, two thermostats, garage, coverings, P36 uses; even one legacy row prevents removing its plugin.
+- [ ] Back up/disable legacy paths by group with owner; retain rollback procedure/private archive.
+- [ ] If HAP sidecar remains, open an estimated P04/P21 follow-up; its presence prevents an all-Rust label even with native integrations.
+- [ ] Measure final installation/publish actual gains; remove unused native-profile dependencies without breaking a still-offered hybrid profile.
+- [ ] Stable tag only after covered-scope acceptance; no universal Homebridge-ecosystem compatibility claim.
 
-Par défaut, les sessions sont successives, chacune sur un ticket et une branche. Les domaines ci-dessous servent à retrouver les fichiers concernés ; ils ne déclenchent aucun agent en parallèle. Si le propriétaire demande explicitement des sessions concurrentes, utiliser des espaces isolés et réserver les fichiers partagés.
+## 4. Luna session organization
 
-| Ligne | Tickets successifs | Fichiers principalement possédés |
+By default, sessions run sequentially, each on one ticket/branch. Domains below help locate affected files; they launch no parallel agents. If the owner explicitly requests concurrent sessions, use isolated workspaces and reserve shared files.
+
+| Track | Sequential tickets | Main owned files |
 |---|---|---|
-| Luna socle | P06–P09, P16, P18–P19 | bridge-core/store et bridge-server |
-| Luna TaHoma | P10–P15, puis P33–P35 | integration-tahoma et fixtures fabricant |
-| Luna interface/distribution | P17, P23–P30 | web et packaging |
-| Référent intégration/revue | P04–P05, P20–P22, P31–P32, P37–P38 | contrats, HAP, revue des changements transversaux |
+| Luna baseline | P06–P09, P16, P18–P19 | bridge-core/store and bridge-server |
+| Luna TaHoma | P10–P15, then P33–P35 | integration-tahoma and manufacturer fixtures |
+| Luna UI/distribution | P17, P23–P30 | web and packaging |
+| Integration/review lead | P04–P05, P20–P22, P31–P32, P37–P38 | contracts, HAP, cross-cutting review |
 
-P17 attend P09. P18 attend P15/P16. P33–P35 se font successivement si leurs changements touchent le même dispatcher. P21 et P22 sont des alternatives, pas deux implémentations à développer d'emblée.
+P17 waits for P09. P18 waits for P15/P16. P33–P35 run sequentially when modifying the same dispatcher. P21/P22 are alternatives, not two implementations to build immediately.
 
-Un agent ne modifie pas un contrat/export/lockfile partagé en concurrence avec un autre. Il propose le changement au référent, qui réserve les fichiers et met à jour tous les consommateurs. Chaque PR a un test démontrant le comportement et une liste des appareils/capacités qu'elle couvre. Le rapport de session et la mémoire courante permettent au ticket suivant de reprendre sans l'historique du chat.
+An agent must not edit shared contracts/exports/lockfiles concurrently with another. Propose changes to the lead, who reserves files and updates every consumer. Every PR includes a behavior-demonstrating test and a list of covered devices/capabilities. Session reports/current memory let the next ticket resume without chat history.
 
-## 5. Conditions de lancement et décisions restantes
+## 5. Startup conditions and remaining decisions
 
-Le dossier fournit un plan directement découpable. Avant d'exécuter le développement : revue du périmètre et des cibles, fin de P03 pour les profils exacts, puis décision P04. Ces contrôles évitent d'affecter à Luna une intégration dont l'API ou le matériel reste inconnu.
+The documents provide an actionable breakdown. Before integration development, review scope/targets, complete P03 for exact profiles, then decide P04. These checks avoid assigning Luna an integration with unknown API/hardware.
 
-Informations encore nécessaires : version QTS/Container Station, modes exacts du garage, présence de retour d'état et d'obstacle, modèles/commandes des deux chauffages, contenu des neuf actions, fonctions Matter éventuelles et inventaire authentifié TaHoma. Ces données restent locales ; seul leur résumé technique anonymisé enrichit le plan public.
+Still needed: QTS/Container Station version, exact garage modes, state/obstruction feedback, models/commands of both heating devices, contents of nine actions, any Matter functions, authenticated TaHoma inventory. Keep this data local; only anonymized technical summaries extend the public plan.

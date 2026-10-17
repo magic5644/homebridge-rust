@@ -1,91 +1,92 @@
-# Guide d'exécution autonome — agents Luna
+# Autonomous execution guide — Luna agents
 
-## 1. Finalité
+## 1. Purpose
 
-Implémenter une tâche bornée du [plan](superpowers/plans/2026-10-17-homebridge-rust.md), sans redécouvrir l'architecture ni élargir son périmètre. Le serveur cible est un QNAP TS-251+ avec 2 Go, la box est une TaHoma V2 et les usages comprennent io-homecontrol, RTS, garage, chauffage et neuf actions à qualifier.
+Implement one bounded task from the [plan](superpowers/plans/2026-10-17-homebridge-rust.md), without rediscovering the architecture or expanding scope. The target server is a QNAP TS-251+ with 2 GB, the gateway is a TaHoma V2, and use cases include io-homecontrol/RTS, garage, heating, and nine actions to qualify.
 
-Luna convient aux mappings à partir de fixtures, aux routes API déjà spécifiées, aux écrans, aux tests et au packaging isolé. Les décisions HAP, la cryptographie, les essais physiques du garage et la migration de production nécessitent une revue humaine compétente. L'agent ne choisit pas seul de retirer une protection pour faire passer un test.
+Luna suits fixture-based mappings, specified API routes, screens, tests, and isolated packaging tasks. HAP decisions, cryptography, physical garage tests, and production migration require competent human review. An agent must not remove a safeguard merely to pass a test.
 
-## 2. Contexte à retrouver pour chaque ticket
+## 2. Context to recover for each ticket
 
-Ne pas copier tout l'historique du chat. L'agent retrouve dans le dépôt :
+Do not copy the entire chat history. The agent finds the following in the repository:
 
-1. L'ID du ticket et son texte intégral dans le plan ; le commit de départ se vérifie dans Git.
-2. `docs/architecture.md`, `docs/contracts.md`, ce guide et la section utile de l'inventaire anonymisé.
-3. Les fichiers possédés par la tâche et les exports des dépendances déjà fusionnées.
-4. Les fixtures et les tests du composant, plus les consommateurs de l'interface modifiée.
-5. La commande de vérification et les preuves attendues, notamment si un essai matériel reste à faire.
+1. The ticket ID and full text in the plan; verify the starting commit in Git.
+2. `docs/architecture.md`, `docs/contracts.md`, this guide, and relevant sections of the anonymized inventory.
+3. Files owned by the task and exports of already merged dependencies.
+4. Component fixtures/tests and consumers of any modified interface.
+5. Verification commands and expected evidence, including any outstanding hardware tests.
 
-Les tâches se lancent depuis la racine du dépôt. Vérifier les instructions `AGENTS.md` présentes et les règles de l'environnement. Sur le poste du propriétaire, les commandes shell sont préfixées avec `rtk` conformément à son fichier RTK. En CI, utiliser les commandes natives sans installer RTK comme dépendance produit.
+Run tasks from the repository root. Check applicable `AGENTS.md` and environment rules. On the owner's machine, prefix shell commands with `rtk` as required by the RTK file. In CI, use native commands without adding RTK as a product dependency.
 
-Pour toute question de bibliothèque/API/CLI : commencer par Context7 `resolve-library-id`, choisir la documentation officielle pertinente, puis `query-docs` avec la question complète. En absence de résultat, utiliser les sources officielles et signaler la limite. Ne jamais inclure les identifiants domestiques dans une requête externe.
+For library/API/CLI questions: start with Context7 `resolve-library-id`, choose relevant official documentation, then `query-docs` with the full question. If no results are available, use official sources and report the limit. Never include household identifiers in external queries.
 
-## 3. Prompt et règle de session
+All documentation, comments, prompts, reports, and PR descriptions must be in English.
 
-Le [prompt de démarrage](prompts/start-ticket.md) est la source unique à copier. Remplacer uniquement `PXX` par l'ID choisi ; commencer par P02. L'agent déduit les fichiers, dépendances et fixtures depuis le ticket et vérifie ce qui existe réellement.
+## 3. Startup prompt and session rule
 
-Le propriétaire demande **un ticket par session**. La session travaille en autonomie sur ce ticket, crée ou actualise sa PR et vérifie la CI, puis s'arrête. Pas de passage automatique au ticket suivant, de délégation ou de création de chat supplémentaire sans demande explicite.
+The [startup prompt](prompts/start-ticket.md) is the single source to copy. Replace only `PXX` with the chosen ID; the first development ticket is P02. Infer files, dependencies, and fixtures from the ticket and verify what actually exists.
 
-Lire [AGENTS.md](../AGENTS.md), [l'état courant](project-state.md) et les [instructions GitHub Actions](../.github/instructions/github-actions-memory.instructions.md). Le modèle Luna est choisi parmi ceux effectivement disponibles dans l'environnement par le propriétaire, sans référence de modèle ancienne imposée par le dépôt.
+The owner requires **one ticket per session**. The session works autonomously on that ticket, creates/updates its PR, verifies CI, and stops. Do not move to the next ticket, delegate, or create another chat without an explicit request.
 
-## 4. Autonomie et limites concrètes
+Read [AGENTS.md](../AGENTS.md), [current state](project-state.md), and [GitHub Actions instructions](../.github/instructions/github-actions-memory.instructions.md). The owner selects Luna from models actually available in the environment; the repository does not impose an outdated model reference.
 
-### L'agent peut faire sans interruption
+## 4. Autonomy and concrete limits
 
-- Lire et modifier les fichiers de son ticket, écrire des tests et compléter les exemples fictifs.
-- Consulter documentation et code source officiels ; réutiliser la pile choisie.
-- Construire le produit localement ou en CI, exécuter des serveurs simulés sur loopback.
-- Créer sa branche et ses commits dans un espace isolé si l'environnement l'autorise.
-- Corriger les appelants et tests qu'une modification autorisée affecte ; expliquer toute extension de fichiers.
-- Mesurer le simulateur, détecter une fuite, proposer la correction minimale et la vérifier.
+### The agent may proceed without interruption
 
-### L'agent prépare mais ne fait pas de sa propre initiative
+- Read/edit ticket files, write tests, and complete fictional examples.
+- Consult official documentation/source and reuse the selected stack.
+- Build locally or in CI and run simulated servers on loopback.
+- Create its branch and commits in an isolated workspace when the environment permits.
+- Fix callers and tests affected by authorized changes; explain any additional files.
+- Measure the simulator, detect a leak, propose the minimum fix, and verify it.
 
-- Lire des sauvegardes ou configurations privées hors du contexte explicitement fourni.
-- Activer le mode développeur, créer/révoquer un token ou toucher à un appairage existant.
-- Envoyer une commande sur un volet, un chauffage, un scénario ou une porte de garage.
-- Installer un paquet sur le NAS de production, redémarrer un service existant ou désactiver un plugin.
-- Déplacer les identités HomeKit, réinitialiser un pont ou restaurer des données réelles.
-- Publier des captures, noms de pièces/personnes, adresses internes, PIN, clés, logs bruts ou inventaires détaillés dans GitHub.
+### The agent prepares but does not perform on its own
 
-Ces limites concernent une mission d'implémentation standard. Une instruction explicite du propriétaire pour une opération précise constitue une autorisation à prendre en compte ; elle ne doit pas être redemandée mécaniquement. Les opérations physiques du garage suivent la procédure constructeur et une présence humaine adaptée.
+- Read private backups/configuration outside explicitly provided context.
+- Enable developer mode, create/revoke a token, or modify existing pairing.
+- Send a command to a covering, heating system, scenario, or garage door.
+- Install a package on the production NAS, restart an existing service, or disable a plugin.
+- Move HomeKit identities, reset a bridge, or restore real data.
+- Publish captures, room/person names, internal addresses, PINs, keys, raw logs, or detailed inventories on GitHub.
 
-## 5. Contrats et partage de fichiers
+These limits apply to standard implementation work. An explicit owner instruction for a specific operation provides authorization and must not be requested again mechanically. Physical garage operations follow manufacturer procedures and require appropriate human presence.
 
-- Les types exacts du contrat sont la source commune. Vérifier tous leurs appelants avant modification.
-- Une modification d'API inclut dans la même PR OpenAPI, client Web, fixtures, projection HAP et tests concernés.
-- `Cargo.lock`, les exports `lib.rs`, le dispatcher de mapping et les contrats ne sont pas modifiés concurremment par plusieurs agents.
-- Proposer les changements transversaux au référent, qui réserve les fichiers ou séquence les tickets.
-- Intégrer une PR à la fois et exécuter la CI sur la combinaison des changements.
-- Si un ticket commence à nécessiter une plateforme de plugins, un bus réseau ou un nouveau protocole, revenir au besoin inventorié avant de coder.
+## 5. Contracts and shared files
 
-Pas de génération de « support universel » par familles de noms de produits. Une capacité n'est ajoutée qu'avec commande déclarée, données de test, sortie UI/HomeKit définie et procédure de validation réelle.
+- Exact contract types are the shared source of truth. Check all callers before modifying them.
+- An API change includes OpenAPI, Web client, fixtures, HAP projection, and affected tests in the same PR.
+- `Cargo.lock`, `lib.rs` exports, the mapping dispatcher, and contracts must not be edited concurrently by multiple agents.
+- Propose cross-cutting changes to the integration lead, who reserves files or sequences tickets.
+- Integrate one PR at a time and run CI on the combined changes.
 
-## 6. Critères de clôture d'une tâche
+Do not generate universal support based on product-name families. Add a capability only with declared commands, test data, defined UI/HomeKit output, and a real validation procedure.
 
-- Comportement exact du ticket démontré par une preuve reproductible.
-- Test négatif pertinent passé : erreurs, indisponibilité, limites ou absence de capacité selon le ticket.
-- Aucune régression connue des appelants ; contrôles de format, compilation et tests requis réussis.
-- Aucun secret ou donnée réelle ajouté ; aucun appareil commandé par un test automatique.
-- Documentation et matrice de couverture à jour ; état « simulé », « matériel validé » ou « legacy » distinct.
-- Diff limité, absence de code inutilisé et de dépendance ajoutée pour une simple opération standard.
-- Revue terminée avant fusion, avec attention spécifique aux hypothèses matérielles.
+## 6. Task completion criteria
 
-## 7. Compte rendu attendu
+- Exact ticket behavior demonstrated by reproducible evidence.
+- Relevant negative test passed: errors, unavailability, limits, or missing capability as appropriate.
+- No known caller regressions; required formatting, compilation, and tests passed.
+- No secrets or real data added; no automatic test commands a real device.
+- Documentation and coverage matrix updated; simulated, hardware-validated, and legacy states remain distinct.
+- Focused diff, no unused code, no dependency for a simple standard-library operation.
+- Review completed before merge, with particular attention to hardware assumptions.
 
-Le rapport est enregistré dans `docs/sessions/PXX.md` et résumé dans `docs/project-state.md`. Il fait partie de la PR du ticket. Une PR prête reste `ready_for_review` jusqu'à intégration vérifiée ; elle n'est pas assimilée à un ticket terminé sur `main`.
+## 7. Expected report
+
+Save the report in `docs/sessions/PXX.md` and summarize it in `docs/project-state.md`. It is part of the ticket PR. A ready PR remains `ready_for_review` until integration is verified; it is not a completed ticket on `main`.
 
 ```text
-Ticket : Pxx
-Résultat : comportement obtenu, en une phrase.
-Commit : identifiant.
-Fichiers modifiés : liste courte.
-Interfaces produites/modifiées : noms et effet sur les consommateurs.
-Vérifications : commande, résultat et durée si utile.
-Matériel réellement testé : aucun / modèle et scénario autorisé.
-Compatibilité : native simulée / native validée / legacy / bloquée.
-Limites : hypothèse restante, preuve manquante et ticket qui la possède.
-Prochaine dépendance disponible : ticket/API désormais exploitable.
+Ticket: Pxx
+Result: achieved behavior, in one sentence.
+Commit: identifier.
+Changed files: short list.
+Produced/modified interfaces: names and impact on consumers.
+Checks: command, result, and duration if useful.
+Hardware actually tested: none / authorized model and scenario.
+Compatibility: native simulated / native validated / legacy / blocked.
+Limits: remaining assumption, missing evidence, and owning ticket.
+Next available dependency: ticket/API now usable.
 ```
 
-Une réponse « ça compile » n'est pas une preuve de compatibilité HomeKit ou Somfy. Une capture de la page Homebridge ne prouve pas qu'un volet s'est déplacé. Un retour de commande accepté ne prouve pas que le garage est fermé.
+Compilation alone is not evidence of HomeKit or Somfy compatibility. A Homebridge screenshot does not prove that a covering moved. Command acceptance does not prove that the garage is closed.

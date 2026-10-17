@@ -1,50 +1,48 @@
 # Homebridge Rust
 
-Proposition du 17 octobre 2026 pour `magic5644` : un pont domotique économe en ressources, administrable sur le Web, installable sur NAS ou avec Docker, avec intégration Somfy/TaHoma prioritaire.
+Proposal dated October 17, 2026, for `magic5644`: a resource-efficient home automation bridge with Web administration, NAS or Docker installation, and Somfy/TaHoma integration as the priority.
 
-**État : socle CLI/workspace P02 ; aucune intégration domotique ni migration effectuée.** Les objectifs chiffrés sont des critères à mesurer, pas des gains déjà obtenus.
+**Status: P02 CLI/workspace baseline; no home automation integration or migration performed.** Numerical targets remain criteria to measure, not achieved gains.
 
-## Lire le dossier
+## Read the project documents
 
-1. [Architecture et décisions](docs/architecture.md) : périmètre, alternatives, technologies, HomeKit, Somfy, installation, performances et migration.
-2. [Contrats communs](docs/contracts.md) : modèle de données, interfaces Rust, API Web et règles partagées.
-3. [Plan d'intégration et tickets](docs/superpowers/plans/2026-10-17-homebridge-rust.md) : ordre d'exécution, fichiers, tests et conditions de clôture de chaque tâche.
-4. [Guide d'exécution Luna](docs/execution-luna.md) : contexte minimal, autonomie, limites et modèle de compte rendu.
-5. [Inventaire à compléter](docs/inventory-template.md) : matériel, plugins, capacités et couverture de chaque équipement.
-6. [Recherche et vérifications](docs/research.md) : sources, documentation Context7 et observations locales sans identifiants de la maison.
+1. [Architecture and decisions](docs/architecture.md): scope, alternatives, technology, HomeKit, Somfy, installation, performance, and migration.
+2. [Shared contracts](docs/contracts.md): data model, Rust interfaces, Web API, and shared rules.
+3. [Implementation plan and tickets](docs/superpowers/plans/2026-10-17-homebridge-rust.md): execution order, files, tests, and completion criteria.
+4. [Luna execution guide](docs/execution-luna.md): minimum context, autonomy, limits, and report format.
+5. [Inventory template](docs/inventory-template.md): hardware, plugins, capabilities, and device coverage.
+6. [Research and verification](docs/research.md): sources, Context7 documentation, and local observations without household identifiers.
 
-## Une session par ticket
+## One session per ticket
 
-Commencer par [l'état courant](docs/project-state.md), puis utiliser le [prompt de démarrage](docs/prompts/start-ticket.md) avec le ticket choisi après vérification de ses dépendances. Les [instructions agents](AGENTS.md) et la [mémoire GitHub Actions](.github/instructions/github-actions-memory.instructions.md) sont versionnées pour les sessions suivantes.
+Start with [current state](docs/project-state.md), then use the [startup prompt](docs/prompts/start-ticket.md) for the chosen ticket after verifying its dependencies. [Agent instructions](AGENTS.md) and [GitHub Actions memory](.github/instructions/github-actions-memory.instructions.md) are versioned for future sessions.
 
-La session implémente son ticket, teste, prépare une PR et laisse un rapport ; elle ne démarre pas automatiquement le suivant. Le harnais exécutable P02 est décrit dans [son rapport](docs/sessions/P02.md).
+Each session implements its ticket, tests it, prepares a PR, and leaves a report; it does not automatically start the next ticket. The P02 executable baseline is described in [its report](docs/sessions/P02.md).
 
-## Orientation recommandée
+All project documentation and PR descriptions must be in English. The planned French product UI is a separate requirement.
 
-Construire le serveur et les intégrations en Rust. Tester très tôt la viabilité de HomeKit natif avant de le choisir définitivement. Garder Homebridge pour les équipements qui dépendent encore de ses plugins ; prévoir un petit transport HAP-NodeJS temporaire si la pile HAP Rust ne passe pas les tests.
+## Recommended direction
 
-La compatibilité avec toute la maison se vérifie équipement par équipement. Un plugin JavaScript existant ne devient pas un plugin Rust par recompilation. Le profil entièrement Rust ne sera livré qu'après validation de HomeKit et remplacement de toutes les intégrations nécessaires.
+Build the server and integrations in Rust. Test native HomeKit feasibility early before selecting it permanently. Keep Homebridge for devices that still depend on its plugins; provide a small temporary HAP-NodeJS transport if the Rust HAP stack fails validation.
 
-## Dépôt et confidentialité
+Compatibility with the entire household must be verified per device. Recompiling a JavaScript plugin does not make it a Rust plugin. An all-Rust edition will be delivered only after HomeKit validation and replacement of every required integration.
 
-Dépôt **public** créé : [magic5644/homebridge-rust](https://github.com/magic5644/homebridge-rust), selon le choix du propriétaire. La publication initiale contient uniquement les documents. Le compte, la visibilité et les fichiers distants ont été vérifiés.
+## Repository and confidentiality
 
-Ne jamais versionner de jetons, de sauvegardes Homebridge réelles, d'identifiants TaHoma, d'adresses des appareils ou de données d'appairage HomeKit. Les exemples et tests utiliseront des valeurs fictives.
+Public repository: [magic5644/homebridge-rust](https://github.com/magic5644/homebridge-rust), as requested by the owner. The initial publication contained documents only. The account, visibility, and remote files were verified.
 
-## Développer le socle P02
+Never commit tokens, real Homebridge backups, TaHoma identifiers, device addresses, or HomeKit pairing data. Examples and tests use fictional values.
 
-Installer Rust **1.99.1** avec rustfmt et clippy (rustup lit `rust-toolchain.toml`),
-puis lancer à la racine :
+## Develop the P02 baseline
+
+Install Rust **1.99.1** with rustfmt and clippy (rustup reads `rust-toolchain.toml`), then run from the repository root:
 
 ```sh
 sh scripts/check.sh
 cargo run -p bridge-server --locked -- --version
-cargo run -p bridge-server --locked -- check --config /chemin/vers/config.toml
+cargo run -p bridge-server --locked -- check --config /path/to/config.toml
 ```
 
-`check` lit un fichier UTF-8 sans le modifier et échoue si le chemin est absent,
-inaccessible ou désigne un répertoire. Il ne valide pas encore un schéma métier,
-ne démarre aucun serveur et ne contacte aucun équipement.
-Les trois bibliothèques sont des socles vides pour les tickets suivants.
+`check` reads a UTF-8 file without modifying it and fails for a missing or inaccessible path or a directory. It does not yet validate a configuration schema, start a server, or contact equipment. The three integration/core/transport libraries are empty baselines for later tickets.
 
-Versions et licences : [dépendances](docs/dependencies.md). Code sous [MIT](LICENSE).
+Versions and licenses: [dependencies](docs/dependencies.md). Project code is licensed under [MIT](LICENSE).

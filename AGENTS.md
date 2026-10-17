@@ -1,38 +1,46 @@
-# Instructions du projet
+# Project instructions
 
-## Démarrer chaque session
+## Documentation language
 
-1. Lire [l'état courant](docs/project-state.md), le [guide de session](docs/prompts/start-ticket.md) et le ticket demandé dans le [plan](docs/superpowers/plans/2026-10-17-homebridge-rust.md).
-2. Lire les parties utiles de [l'architecture](docs/architecture.md), des [contrats](docs/contracts.md) et du [guide Luna](docs/execution-luna.md), puis les fichiers concernés et leurs appelants.
-3. Vérifier l'état Git, la branche, les changements existants, les PR et les dépendances du ticket. Une dépendance seulement décrite ou dans une PR non fusionnée n'est pas disponible sur `main`.
-4. Exécuter **un seul ticket par session**. Ne pas enchaîner le suivant, lancer de sous-agents ou créer d'autres chats sans demande explicite. Le modèle de la session est choisi par le propriétaire ; aucune sélection automatique de modèle.
+All project documentation must be written in **English**. This includes the README,
+architecture, contracts, plans, prompts, agent instructions, session reports, code
+comments, and pull request descriptions. Keep identifiers, commands, paths, and API
+names unchanged when translating. The product UI may remain French as specified
+in the architecture; the documentation language does not change that requirement.
 
-Les instructions explicites du propriétaire dans la session priment sur les conventions de ce dépôt. Une validation déjà donnée ne doit pas être redemandée mécaniquement.
+## Start every session
 
-## Projet et décisions à préserver
+1. Read [current state](docs/project-state.md), the [session guide](docs/prompts/start-ticket.md), and the requested ticket in the [plan](docs/superpowers/plans/2026-10-17-homebridge-rust.md).
+2. Read the relevant parts of the [architecture](docs/architecture.md), [contracts](docs/contracts.md), and [Luna guide](docs/execution-luna.md), then the affected files and their callers.
+3. Check Git status, the branch, existing changes, PRs, and ticket dependencies. A dependency that is only documented or in an unmerged PR is not available on `main`.
+4. Execute **one ticket per session**. Do not start the next ticket, spawn subagents, or create other chats without an explicit request. The owner selects the session model; no automatic model selection.
 
-- Dépôt public : `https://github.com/magic5644/homebridge-rust`, propriétaire `magic5644`, branche de référence `main`.
-- Cible : QNAP TS-251+, Celeron J1900, 2 Go ; TaHoma V2 ; volets io-homecontrol et RTS, garage, deux thermostats et neuf actions à qualifier.
-- Quatre packages Rust prévus : `bridge-core`, `integration-tahoma`, `transport-homekit`, `bridge-server`. UI Svelte/TypeScript statique au P17.
-- Distribution Docker amd64 et paquet QNAP `.qpkg` ; aucune compilation sur le NAS. Le choix du transport HAP natif reste conditionné au P04.
-- La compatibilité est prouvée par appareil et usage. Garder Homebridge pour les fonctions non remplacées ; son maintien ne constitue pas une intégration Rust livrée.
-- La mémoire durable vit dans ces fichiers versionnés, pas seulement dans le chat ou une mémoire personnelle d'agent. L'état d'implémentation réel se vérifie dans Git et la CI.
+The owner's explicit session instructions take precedence over repository conventions. Do not mechanically request approval that has already been given.
 
-## Exécution du ticket
+## Project and decisions to preserve
 
-- Travailler sur une branche dédiée `feat/pXX-sujet` ; si une branche/PR du ticket existe, l'examiner avant d'en créer une autre. Préserver les modifications locales du propriétaire.
-- Réutiliser les interfaces du contrat et les conventions en place. Implémenter le minimum complet, sans fonctionnalités futures ou abstraction supplémentaire.
-- Pour une logique non triviale, écrire un test de comportement, observer son échec pertinent, puis implémenter et vérifier. Une correction modifie aussi tous les appelants et fixtures affectés.
-- Un changement de contrat commun inclut ses consommateurs, sa documentation et ses tests dans le même ticket. Signaler l'impact ; ne pas réserver la correction à une autre session.
-- Les tâches ordinaires autorisées avancent sans demande de confirmation. Si un prérequis indispensable manque, préciser lequel et terminer les travaux indépendants sans inventer une preuve.
-- Avant de conclure, vérifier le diff et les contrôles requis ; indiquer ceux qui n'ont pas été exécutés et pourquoi.
+- Public repository: `https://github.com/magic5644/homebridge-rust`, owner `magic5644`, reference branch `main`.
+- Target: QNAP TS-251+, Celeron J1900, 2 GB; TaHoma V2; io-homecontrol and RTS coverings, garage, two thermostats, and nine actions to qualify.
+- Four planned Rust packages: `bridge-core`, `integration-tahoma`, `transport-homekit`, `bridge-server`. Static Svelte/TypeScript UI at P17.
+- Docker amd64 and QNAP `.qpkg` distribution; no compilation on the NAS. Native HAP transport remains conditional on P04.
+- Compatibility is proven per device and use case. Keep Homebridge for functions not replaced; retaining it does not constitute a delivered Rust integration.
+- Durable memory belongs in these versioned files, not only in chat or personal agent memory. Verify actual implementation state in Git and CI.
 
-## Documentation technique et commandes
+## Execute a ticket
 
-- Pour bibliothèques, frameworks, SDK, API, CLI et services cloud : utiliser Context7, d'abord `resolve-library-id` sauf ID exact fourni, puis `query-docs` avec la question complète. Choisir la source officielle pertinente ; versions explicites quand connues. Sans documentation accessible, signaler la limite plutôt qu'inventer une API.
-- Sur le poste du propriétaire, lire le fichier RTK de l'environnement s'il existe et préfixer les commandes shell avec `rtk` (`rtk proxy` pour une commande non prise en charge). En CI, utiliser les outils natifs ; RTK n'est pas une dépendance produit.
-- Utiliser `rg` pour la recherche. Ne pas modifier les réglages globaux Git/Codex pour résoudre un problème propre au dépôt.
-- Les commandes Rust ci-dessous deviennent exécutables avec P02 ; ne pas annoncer leur réussite avant création du workspace et exécution réelle :
+- Use a dedicated `feat/pXX-topic` branch; inspect any existing ticket branch/PR before creating another. Preserve the owner's local changes.
+- Reuse contract interfaces and existing conventions. Implement the complete minimum, without future features or extra abstractions.
+- For nontrivial logic, write a behavior test, observe its relevant failure, then implement and verify. A fix also updates every affected caller and fixture.
+- A shared contract change includes its consumers, documentation, and tests in the same ticket. Explain the impact; do not defer the correction to another session.
+- Proceed without confirmation for ordinary authorized work. If an essential prerequisite is missing, identify it and complete independent work without inventing evidence.
+- Before concluding, review the diff and required checks; list checks not run and explain why.
+
+## Technical documentation and commands
+
+- For libraries, frameworks, SDKs, APIs, CLIs, and cloud services, use Context7: `resolve-library-id` first unless an exact ID is provided, then `query-docs` with the full question. Select relevant official sources and explicit versions when known. If documentation is inaccessible, report the limit instead of inventing an API.
+- On the owner's machine, read the environment's RTK file if present and prefix shell commands with `rtk` (`rtk proxy` for unsupported commands). Use native tools in CI; RTK is not a product dependency.
+- Use `rg` for searches. Do not change global Git/Codex settings to solve a repository-specific issue.
+- The Rust commands below become executable with P02; do not report success before creating the workspace and actually running them:
 
 ```text
 cargo fmt --all -- --check
@@ -41,30 +49,30 @@ cargo test --workspace --locked
 cargo build -p bridge-server --release --locked
 ```
 
-P02 crée `scripts/check.sh`, point d'entrée de ces quatre contrôles, utilisé localement et en CI. Les scripts frontend ne sont requis qu'à partir du ticket qui crée `web/package.json`.
+P02 creates `scripts/check.sh`, the entry point for these four checks, used locally and in CI. Frontend scripts are required only from the ticket that creates `web/package.json`.
 
-## GitHub, CI et livraisons
+## GitHub, CI, and deliveries
 
-Lire [.github/instructions/github-actions-memory.instructions.md](.github/instructions/github-actions-memory.instructions.md) pour tout changement de workflow, dépendance de build, packaging ou publication.
+Read [.github/instructions/github-actions-memory.instructions.md](.github/instructions/github-actions-memory.instructions.md) for changes to workflows, build dependencies, packaging, or publication.
 
-- Vérifier le dépôt et le compte avant une écriture distante ; utiliser la session GitHub existante, sans copier de token dans un fichier ou une commande.
-- Un ticket de code donne une branche, un commit limité et une PR vers `main`, avec tests, limites et lien vers le ticket du plan. Ne pas assimiler un ID Pxx à un numéro d'issue GitHub.
-- Les prompts de démarrage autorisent commit, push de la branche et création/mise à jour de sa PR. Aucune fusion, publication de release ou installation de production automatique.
-- Attendre le résultat CI du commit poussé ; inspecter les échecs relevant du ticket et les corriger. Si l'exécution distante est inaccessible ou encore en attente, le dire explicitement et ne pas déclarer le ticket terminé.
-- Aucun workflow ne déploie sur le NAS ni n'utilise son réseau domestique. Les tests matériel restent séparés des PR publiques.
+- Verify the repository and account before remote writes; use the existing GitHub session without copying a token into a file or command.
+- A code ticket produces a branch, a focused commit, and a PR to `main`, with tests, limits, and a link to the plan ticket. Do not equate Pxx IDs with GitHub issue numbers.
+- Startup prompts authorize committing, pushing the branch, and creating/updating its PR. No automatic merge, release publication, or production installation.
+- Wait for CI results for the pushed commit; inspect and fix failures within the ticket's scope. If remote execution is inaccessible or still pending, say so explicitly and do not declare the ticket complete.
+- No workflow deploys to the NAS or uses its home network. Hardware tests remain separate from public PRs.
 
-## Données et matériel
+## Data and hardware
 
-- Fixtures fictives par défaut. Données privées dans `private/`, secrets et état d'exécution hors Git ; ne pas ajouter d'exceptions à `.gitignore` pour les publier.
-- Les modes `observe` et `legacy` interdisent commandes et publication HomeKit depuis Rust.
-- Aucun essai automatique sur des équipements réels, aucune restauration de production, aucun reset d'appairage ou changement de plugin sans autorisation précise.
-- Une commande physique incertaine n'est pas rejouée. Une position RTS estimée ou un état de garage inconnu n'est pas une mesure confirmée.
-- Les secrets, PIN, cookies, identifiants de passerelle, noms domestiques et captures privées ne figurent jamais dans GitHub, les logs CI, les rapports publics ou les requêtes de documentation.
+- Fictional fixtures by default. Private data belongs in `private/`, secrets and runtime state outside Git; do not add `.gitignore` exceptions to publish them.
+- `observe` and `legacy` modes prohibit commands and HomeKit publication from Rust.
+- No automatic tests on real equipment, production restoration, pairing resets, or plugin changes without specific authorization.
+- An uncertain physical command is not replayed. An estimated RTS position or unknown garage state is not a confirmed measurement.
+- Secrets, PINs, cookies, gateway IDs, household names, and private captures must never appear in GitHub, CI logs, public reports, or documentation queries.
 
-## Fin de session et mémoire
+## End-of-session memory
 
-- Écrire `docs/sessions/PXX.md` : but, branche/PR, commit d'implémentation testé, changements, commandes et résultats, état CI, limites, dépendances désormais disponibles. Éviter un hash auto-référent : citer le commit testé avant ajout du rapport ou le dernier commit d'implémentation.
-- Actualiser `docs/project-state.md` avec le résultat et le point de reprise. Mettre à jour les cases du ticket uniquement sur preuve.
-- Distinguer `in_progress`, `implemented`, `ci_pending`, `ready_for_review`, `blocked`, `done`. `done` exige les critères du ticket et l'intégration vérifiée sur `main` ; tests matériel/humains restent requis quand le ticket les exige.
-- Après fusion par le propriétaire, la session suivante vérifie le commit et la CI, puis réconcilie l'état si le rapport précédent indiquait encore `ready_for_review`.
-- Conclure par résultat, PR/commit, vérifications et limites. S'arrêter après ce ticket ; ne jamais démarrer le prochain automatiquement.
+- Write `docs/sessions/PXX.md`: goal, branch/PR, tested implementation commit, changes, commands/results, CI state, limits, and dependencies now available. Avoid self-referential hashes: cite the tested commit before adding the report or the last implementation commit.
+- Update `docs/project-state.md` with the result and resumption point. Check off ticket items only with evidence.
+- Distinguish `in_progress`, `implemented`, `ci_pending`, `ready_for_review`, `blocked`, and `done`. `done` requires the ticket criteria and verified integration on `main`; hardware/human tests remain mandatory where required.
+- After the owner merges, the next session verifies the commit and CI, then reconciles state if the previous report still says `ready_for_review`.
+- Conclude with the result, PR/commit, checks, and limits. Stop after this ticket; never start the next automatically.

@@ -1,19 +1,19 @@
-# Contrats partagés — version proposée 1
+# Shared contracts — proposed version 1
 
-Ce document fixe les décisions dont les agents ont besoin pour travailler séparément. Le ticket P05 les transpose en types compilables. Les noms publics ci-dessous sont normatifs ; une modification impose une mise à jour du contrat, des fixtures et de tous ses consommateurs dans le même lot.
+This document fixes decisions agents need to work independently. P05 translates them into compilable types. The public names below are normative; changes require updating the contract, fixtures, and every consumer in the same work package.
 
-## 1. Identités et propriété
+## 1. Identity and ownership
 
-- `DeviceId`, `CommandId` et `RequestId` sont des alias de `uuid::Uuid`, sérialisés sous forme de chaîne UUID.
-- `IntegrationId` est une chaîne stable configurée, par exemple `tahoma-main`.
-- La clé source est `(integration_id, external_id)` ; `external_id` est l'identifiant opaque du fabricant, jamais le nom de l'appareil.
-- Le premier inventaire alloue un UUID et le stocke. Renommer/réordonner les appareils ou redémarrer conserve cet UUID. Changer d'API cloud/local nécessite une correspondance explicite ; ne pas fusionner par nom.
-- `Ownership` : `legacy`, `observe`, `native`. Une commande ou publication est interdite hors `native`.
-- Un appareil disparu devient indisponible. Sa ligne et ses identifiants ne sont pas supprimés implicitement.
+- `DeviceId`, `CommandId`, and `RequestId` alias `uuid::Uuid`, serialized as UUID strings.
+- `IntegrationId` is a configured stable string, such as `tahoma-main`.
+- The source key is `(integration_id, external_id)`; `external_id` is the manufacturer's opaque identifier, never the device name.
+- Initial inventory allocates/stores a UUID. Renaming/reordering devices or restarting preserves it. Switching cloud/local APIs requires explicit mapping; do not merge by name.
+- `Ownership`: `legacy`, `observe`, `native`. Commands/publication are prohibited outside `native`.
+- A disappeared device becomes unavailable. Its row and identifiers are not implicitly deleted.
 
-## 2. Modèle commun dans `bridge-core::model`
+## 2. Shared model in `bridge-core::model`
 
-Notation : types Rust à créer au P05, sans imposer leur corps d'implémentation.
+Notation: Rust types to create at P05, without prescribing implementation bodies.
 
 ```rust
 pub type DeviceId = uuid::Uuid;
@@ -88,38 +88,38 @@ pub struct CommandEnvelope {
 }
 ```
 
-Imports partagés : `BTreeMap = std::collections::BTreeMap`, `Path/PathBuf = std::path::{Path, PathBuf}`, `Duration = std::time::Duration`, `CancellationToken = tokio_util::sync::CancellationToken` ; `BridgeError` est défini dans `bridge-core::error`. Les enums sérialisées utilisent `snake_case`. `Scalar` est taggé par `kind` et `value`, `Command` par `type`. Les variantes sans données de `Command` deviennent par exemple `{"type":"open"}`.
+Shared imports: `BTreeMap = std::collections::BTreeMap`, `Path/PathBuf = std::path::{Path, PathBuf}`, `Duration = std::time::Duration`, `CancellationToken = tokio_util::sync::CancellationToken`; `BridgeError` is defined in `bridge-core::error`. Serialized enums use `snake_case`. `Scalar` is tagged by `kind`/`value`, `Command` by `type`. Data-free `Command` variants become, for example, `{"type":"open"}`.
 
-Règles : position 0 = complètement fermé, 100 = complètement ouvert ; inclinaison −90° à +90° si prise en charge ; température entière en centièmes de °C. `SetPosition` et `SetBrightness` acceptent 0..100 inclus ; les limites fabricant restent plus restrictives si nécessaire. Les plages/quantums sont validés avant envoi. `Unknown` impose `value = None` et aucun temps d'observation confirmé. Une estimation ne devient jamais `Confirmed` sans retour d'état physique.
+Rules: position 0 = fully closed, 100 = fully open; tilt −90° to +90° when supported; integer temperatures in hundredths of °C. `SetPosition` and `SetBrightness` accept 0..100 inclusive; manufacturer limits may be stricter. Validate ranges/steps before sending. `Unknown` requires `value = None` and no confirmed observation timestamp. An estimate never becomes `Confirmed` without physical feedback.
 
-Un matériel non reconnu n'obtient aucune capacité de commande. Les champs Somfy inconnus sont tolérés et conservés dans les fixtures anonymisées ; ils ne deviennent pas automatiquement des commandes génériques exposées par l'API.
+Unrecognized hardware receives no command capabilities. Unknown Somfy fields are tolerated and retained in anonymized fixtures; they do not automatically become generic API commands.
 
-Garage : `DoorState` utilise `Scalar::Text` parmi `open`, `closed`, `opening`, `closing`, `stopped` ; absence de mesure = `Unknown`. `ObstructionDetected` est un booléen confirmé uniquement si réellement mesuré. `GarageDoor` n'est activé pour HomeKit que si les caractéristiques obligatoires peuvent être renseignées honnêtement. `MomentaryGarageAction` représente une impulsion, jamais un état de porte. Une commande cyclique ne reçoit pas automatiquement `OpenCloseStop`.
+Garage: `DoorState` uses `Scalar::Text` with `open`, `closed`, `opening`, `closing`, or `stopped`; no measurement = `Unknown`. `ObstructionDetected` is confirmed only when actually measured. Enable `GarageDoor` for HomeKit only when mandatory characteristics can be populated honestly. `MomentaryGarageAction` represents a pulse, never door state. A cyclic command does not automatically receive `OpenCloseStop`.
 
-`TriggerGarage` est réservé au mode impulsion explicitement qualifié au P33. Il n'est jamais utilisé pour satisfaire automatiquement un ordre HomeKit « fermer » ou « ouvrir ». P34 et P35 peuvent ajouter des modes de chauffage ou un modèle d'action groupée seulement après inventaire précis, avec mise à jour de ce contrat et de tous les consommateurs.
+`TriggerGarage` is reserved for pulse mode explicitly qualified at P33. Never use it to automatically fulfill a HomeKit open/close request. P34/P35 may add heating modes or an action-group model only after precise inventory, updating this contract and every consumer.
 
-## 3. Erreurs
+## 3. Errors
 
-`BridgeError` expose `code() -> &'static str` et un message public sans secret. Le détail technique est dans un événement de journal expurgé. Le code d'erreur est stable entre API, CLI et tests.
+`BridgeError` exposes `code() -> &'static str` and a secret-free public message. Technical detail belongs in a redacted log event. Error codes are stable across API, CLI, and tests.
 
-| Variante / code | HTTP | Sens |
+| Variant / code | HTTP | Meaning |
 |---|---|---|
-| `Validation` / `validation_error` | 422 | Valeur ou capacité invalide |
-| `NotFound` / `not_found` | 404 | Appareil/commande absent |
-| `NotNative` / `not_native` | 409 | Équipement en observation ou historique |
-| `Conflict` / `conflict` | 409 | Même request_id avec contenu différent ou révision obsolète |
-| `Busy` / `busy` | 429 | File ou opération par appareil saturée |
-| `Unavailable` / `unavailable` | 503 | Box ou appareil indisponible |
-| `Authentication` / `authentication_required` | 401 | Session absente/invalide |
-| `Forbidden` / `forbidden` | 403 | CSRF/origine/droit invalide |
-| `UpstreamAuthentication` / `upstream_authentication_failed` | 502 | Jeton fabricant rejeté ; aucun token dans la réponse |
-| `Tls` / `tls_validation_failed` | 502 | CA ou nom d'hôte invalide |
-| `Upstream` / `upstream_error` | 502 | Réponse fabricant inutilisable |
-| `Storage` / `storage_error` | 500 | Échec transaction/stockage ; opération non annoncée réussie |
+| `Validation` / `validation_error` | 422 | Invalid value or capability |
+| `NotFound` / `not_found` | 404 | Missing device/command |
+| `NotNative` / `not_native` | 409 | Device in observe or legacy mode |
+| `Conflict` / `conflict` | 409 | Same request_id with different content or outdated revision |
+| `Busy` / `busy` | 429 | Queue or per-device operation saturated |
+| `Unavailable` / `unavailable` | 503 | Gateway/device unavailable |
+| `Authentication` / `authentication_required` | 401 | Missing/invalid session |
+| `Forbidden` / `forbidden` | 403 | Invalid CSRF/origin/permission |
+| `UpstreamAuthentication` / `upstream_authentication_failed` | 502 | Manufacturer token rejected; no token in response |
+| `Tls` / `tls_validation_failed` | 502 | Invalid CA or hostname |
+| `Upstream` / `upstream_error` | 502 | Unusable manufacturer response |
+| `Storage` / `storage_error` | 500 | Transaction/storage failure; operation not reported successful |
 
-Les variantes peuvent porter un contexte privé expurgé, sans changer les codes. JSON d'erreur : `{"error":{"code":"not_native","message":"Cet appareil est en observation.","request_id":"<UUID>"}}`.
+Variants may carry redacted private context without changing codes. Error JSON: `{"error":{"code":"not_native","message":"This device is in observation mode.","request_id":"<UUID>"}}`.
 
-## 4. Stockage dans `bridge-core::store`
+## 4. Storage in `bridge-core::store`
 
 ```rust
 impl Store {
@@ -148,19 +148,19 @@ impl Store {
 }
 ```
 
-P05 définit aussi : `DiscoveredDevice` = `external_id`, `name`, `capabilities`, `limits`, `available`, `states` ; `DeviceUpdate` = `device_id`, `available: Option<bool>`, `states` ; `CommandRecord` = requête, reçu, `created_at_ms`, `updated_at_ms`, `upstream_execution_id: Option<String>` ; `HapIdentity` = `aid: u64`, `iids: BTreeMap<String,u64>`.
+P05 also defines: `DiscoveredDevice` = `external_id`, `name`, `capabilities`, `limits`, `available`, `states`; `DeviceUpdate` = `device_id`, `available: Option<bool>`, `states`; `CommandRecord` = request, receipt, `created_at_ms`, `updated_at_ms`, `upstream_execution_id: Option<String>`; `HapIdentity` = `aid: u64`, `iids: BTreeMap<String,u64>`.
 
-P06 implémente les tables `schema_migrations`, `devices`, `hap_ids`, `commands`, `sessions`, `settings`. Contraintes uniques sur la clé source et sur request_id ; transactions pour identité/révision/commande. Les mappings service→IID sont conservés après retrait d'une capacité. Un second processus ouvrant le même répertoire en écriture est refusé avec un verrou de processus.
+P06 implements `schema_migrations`, `devices`, `hap_ids`, `commands`, `sessions`, and `settings` tables. Unique constraints cover the source key and request_id; transactions cover identity/revision/command. Service→IID mappings survive capability removal. Reject a second process opening the same directory for writing through a process lock.
 
-La révision est un entier persistant croissant pour toute modification de l'instantané. Les commandes ont leur propre état et ne simulent pas de modification de la mesure physique. Les événements d'état sont émis seulement après validation de la transaction.
+The revision is a persistent increasing integer for every snapshot change. Commands have their own state and do not simulate physical measurement changes. State events are emitted only after the transaction commits.
 
-Un appareil nouvellement découvert est créé en `observe`. Un nouvel inventaire ne modifie jamais la propriété déjà choisie. La disponibilité d'intégration est persistée dans `settings` et émet `IntegrationChanged` seulement après commit.
+Create newly discovered devices in `observe`. A new inventory never changes previously chosen ownership. Integration availability is persisted in `settings` and emits `IntegrationChanged` only after commit.
 
-Idempotence : même request_id et même commande normalisée → reçu existant, sans nouvel envoi ; même identifiant et contenu différent → conflit. Conservation au moins 24 h, maximum 10 000 commandes ; à saturation dans la fenêtre, refuser les nouvelles commandes plutôt que supprimer une clé encore valide. Les commandes non terminales au redémarrage passent à `Unknown`, sans réémission.
+Idempotency: same request_id and normalized command → existing receipt, no new send; same ID with different content → conflict. Retain at least 24 h, maximum 10,000 commands; when saturated within this window, reject new commands instead of deleting a still-valid key. Nonterminal commands become `Unknown` on restart, without retransmission.
 
-`CommandAdmission.is_new` est décidé transactionnellement. Seul `true` autorise le routeur à transmettre ; une duplication avec reçu encore `Accepted` ne doit pas produire un second envoi. Le champ `is_new` reste interne : l'API renvoie le reçu avec HTTP 202 ou 200 selon le cas. `mark_sent` persiste ensemble l'identifiant d'exécution fabricant et le statut `Sent`.
+Decide `CommandAdmission.is_new` transactionally. Only `true` permits router transmission; a duplicate whose receipt is still `Accepted` must not cause a second send. `is_new` remains internal: the API returns the receipt with HTTP 202 or 200 as appropriate. `mark_sent` persists the manufacturer execution ID and `Sent` status together.
 
-## 5. Événements
+## 5. Events
 
 ```rust
 pub struct EventEnvelope { pub sequence: u64, pub event: BridgeEvent }
@@ -172,9 +172,9 @@ pub enum BridgeEvent {
 }
 ```
 
-`sequence` est propre au démarrage courant, sans promesse de reprise durable. L'événement Web ne contient pas de token, d'URL fabricant ou de clé d'appairage. Le client récupère toujours un instantané après reconnexion. Une perte dans le broadcast provoque `ResyncRequired`, puis un nouvel instantané. Les consommateurs HomeKit font la même réconciliation au lieu d'ignorer un retard.
+`sequence` belongs to the current process run, with no durable-resume guarantee. Web events contain no tokens, manufacturer URLs, or pairing keys. Clients always fetch a snapshot after reconnecting. Broadcast loss causes `ResyncRequired`, then a fresh snapshot. HomeKit consumers perform the same reconciliation rather than ignoring lag.
 
-## 6. Interfaces des adaptateurs
+## 6. Adapter interfaces
 
 ```rust
 // integration-tahoma
@@ -189,7 +189,7 @@ impl TahomaClient {
     pub async fn unregister_listener(&self, listener: &str)
         -> Result<(), BridgeError>;
     pub async fn execute(&self, external_id: &str, command: &Command)
-        -> Result<String, BridgeError>; // identifiant d'exécution fabricant
+        -> Result<String, BridgeError>; // manufacturer execution identifier
     pub async fn execution(&self, execution_id: &str)
         -> Result<TahomaExecution, BridgeError>;
 }
@@ -197,53 +197,53 @@ pub fn map_device(raw: &RawTahomaDevice) -> Result<DiscoveredDevice, BridgeError
 pub fn encode_command(raw: &RawTahomaDevice, command: &Command)
     -> Result<serde_json::Value, BridgeError>;
 
-// transport-homekit : même signature pour les deux backends
+// transport-homekit: same signature for both backends
 pub async fn run(config: HomeKitConfig, store: Store,
     commands: tokio::sync::mpsc::Sender<CommandEnvelope>,
     cancel: tokio_util::sync::CancellationToken) -> Result<(), BridgeError>;
 ```
 
-`RawTahomaDevice`, `TahomaEvent`, `TahomaExecution` et DTO d'exécution restent privés au connecteur, à l'exception des types explicitement utilisés par ses fonctions publiques. P11 définit leurs champs depuis les fixtures et l'OpenAPI ; ne pas générer l'API Somfy entière. `TahomaExecution` expose au minimum `id: String` et `status: CommandStatus`.
+`RawTahomaDevice`, `TahomaEvent`, `TahomaExecution`, and execution DTOs remain connector-private except types explicitly used by public functions. P11 defines their fields from fixtures/OpenAPI; do not generate the entire Somfy API. `TahomaExecution` exposes at least `id: String` and `status: CommandStatus`.
 
-`DiscoveredGateway` et `TahomaConfig` sont définis au P05 : nom DNS TLS, port, PIN attendu privé, adresse IP résolue optionnelle, `integration_id` ; `TahomaConfig` ajoute `token_file: PathBuf` et `ca_file: PathBuf`. `HomeKitConfig` : nom, port TCP, interface réseau optionnelle, `state_dir: PathBuf`, backend sélectionné au P04. Le PIN d'appairage est généré et stocké dans l'état privé, jamais dans un fichier d'exemple.
+P05 defines `DiscoveredGateway` and `TahomaConfig`: TLS DNS name, port, private expected PIN, optional resolved IP address, `integration_id`; `TahomaConfig` adds `token_file: PathBuf` and `ca_file: PathBuf`. `HomeKitConfig`: name, TCP port, optional network interface, `state_dir: PathBuf`, backend selected at P04. Generate/store pairing PINs in private state, never in example files.
 
-Le transport HomeKit utilise le Store pour allouer ses AID/IID, souscrire aux événements et relire un instantané après perte d'événements. Il ne conserve pas seulement une copie initiale dont il serait impossible de se resynchroniser.
+HomeKit transport uses Store to allocate AID/IID, subscribe to events, and reread a snapshot after lost events. It must not keep only an initial copy that cannot resynchronize.
 
-P14 fournit `run_events(client: TahomaClient, store: Store, cancel: CancellationToken) -> Result<(), BridgeError>` async ; les mises à jour transitent par le Store, qui publie les événements après commit. `Store` est clonable et partage le même worker et le même broadcast de capacité 256. Chaque consommateur appelle `subscribe` puis lit un instantané, et se réconcilie sur retard.
+P14 provides async `run_events(client: TahomaClient, store: Store, cancel: CancellationToken) -> Result<(), BridgeError>`; updates flow through Store, which publishes events after commit. `Store` is clonable and shares the same worker and 256-capacity broadcast. Each consumer calls `subscribe`, then reads a snapshot and reconciles on lag.
 
-P18 fournit `CommandRouter::submit(&self, CommandRequest) -> Result<CommandAdmission, BridgeError>` async, partagé par Web et HomeKit. Il utilise le Store et le connecteur concret ; aucune interface de plugins dynamiques n'est à inventer.
+P18 provides async `CommandRouter::submit(&self, CommandRequest) -> Result<CommandAdmission, BridgeError>`, shared by Web and HomeKit. It uses Store and the concrete connector; do not invent a dynamic-plugin interface.
 
-## 7. API Web version 1
+## 7. Web API version 1
 
-Préfixe `/api/v1`. Le schéma OpenAPI produit au P08 est la transposition de ces contrats, pas une seconde spécification indépendante. Authentification exigée sauf routes de santé et parcours de création du premier administrateur.
+Prefix `/api/v1`. OpenAPI produced at P08 transposes these contracts; it is not a second independent specification. Authentication is required except for health routes and first-admin setup.
 
-| Méthode / chemin | Entrée / sortie et règle |
+| Method / path | Input / output and rule |
 |---|---|
-| `GET /health/live` | 200 si processus répond ; aucune donnée privée |
-| `GET /health/ready` | 200 si stockage/API prêts, 503 sinon ; panne box = dégradation dans l'API authentifiée |
-| `GET /api/v1/setup/status` | Uniquement `initialized: bool` |
-| `POST /api/v1/setup/admin` | Code éphémère + identifiant + mot de passe ; 201 une seule fois |
-| `POST /api/v1/auth/login` | Crée une session ; 204 + cookie ; erreur générique |
-| `POST /api/v1/auth/logout` | Détruit la session ; 204 |
-| `GET /api/v1/auth/session` | Utilisateur courant et jeton CSRF de session |
-| `GET /api/v1/system` | Version, uptime, RSS si disponible, état des intégrations et backend HAP |
-| `GET /api/v1/devices` | Instantané public : révision + appareils ; external_id omis |
-| `POST /api/v1/devices/{id}/commands` | `{request_id, command}` ; 202 nouveau reçu, 200 reçu idempotent |
-| `GET /api/v1/commands/{id}` | État, dates et erreur publique de la commande |
-| `PUT /api/v1/devices/{id}/ownership` | `{ownership, expected_revision}` ; observation par défaut ; pas de désactivation distante de Homebridge |
-| `GET /api/v1/events` | SSE de session ; heartbeat 15 s ; resynchronisation à chaque reconnexion |
-| `GET /api/v1/integrations/tahoma` | Configuration sans jeton, état de connexion et dernière erreur expurgée |
-| `PUT /api/v1/integrations/tahoma` | Paramètres et token write-only ; validation, pas d'écho du secret |
-| `POST /api/v1/integrations/tahoma/test` | Test TLS/auth et lecture ; aucune commande |
-| `GET /api/v1/homekit` | Backend, statut et appareils publiés ; sans PIN |
-| `GET /api/v1/homekit/pairing` | QR/PIN pour session administrateur ; `Cache-Control: no-store` |
-| `GET /api/v1/logs?limit=...` | Maximum 500 lignes expurgées |
-| `POST /api/v1/backups` | Sauvegarde expurgée téléchargeable ; secrets explicitement exclus |
-| `POST /api/v1/restore/validate` | Valide une archive expurgée et renvoie un rapport ; n'applique rien |
+| `GET /health/live` | 200 if process responds; no private data |
+| `GET /health/ready` | 200 if storage/API ready, otherwise 503; gateway failures appear as degradation in authenticated API |
+| `GET /api/v1/setup/status` | Only `initialized: bool` |
+| `POST /api/v1/setup/admin` | Ephemeral code + username + password; 201 once only |
+| `POST /api/v1/auth/login` | Creates session; 204 + cookie; generic error |
+| `POST /api/v1/auth/logout` | Destroys session; 204 |
+| `GET /api/v1/auth/session` | Current user and session CSRF token |
+| `GET /api/v1/system` | Version, uptime, RSS if available, integration states, HAP backend |
+| `GET /api/v1/devices` | Public snapshot: revision + devices; external_id omitted |
+| `POST /api/v1/devices/{id}/commands` | `{request_id, command}`; 202 for new receipt, 200 for idempotent receipt |
+| `GET /api/v1/commands/{id}` | Command state, timestamps, public error |
+| `PUT /api/v1/devices/{id}/ownership` | `{ownership, expected_revision}`; observe by default; no remote Homebridge disabling |
+| `GET /api/v1/events` | Session SSE; 15 s heartbeat; resynchronize on every reconnect |
+| `GET /api/v1/integrations/tahoma` | Token-free configuration, connection state, latest redacted error |
+| `PUT /api/v1/integrations/tahoma` | Parameters/write-only token; validation, no secret echo |
+| `POST /api/v1/integrations/tahoma/test` | TLS/auth/read test; no commands |
+| `GET /api/v1/homekit` | Backend, status, published devices; no PIN |
+| `GET /api/v1/homekit/pairing` | QR/PIN for administrator session; `Cache-Control: no-store` |
+| `GET /api/v1/logs?limit=...` | Maximum 500 redacted lines |
+| `POST /api/v1/backups` | Downloadable redacted backup; secrets explicitly excluded |
+| `POST /api/v1/restore/validate` | Validates redacted archive and returns report; applies nothing |
 
-La restauration qui applique des données est une commande CLI locale au premier lot. Pas de route redémarrant le NAS, modifiant Docker ou exécutant un shell. Les mises à jour sont assurées par l'installation Docker/native, avec sauvegarde préalable.
+Restoration that applies data is a local CLI command in the initial delivery. No route restarts the NAS, changes Docker, or executes a shell. Updates use Docker/native installation with a prior backup.
 
-JSON d'une commande :
+Command JSON:
 
 ```json
 {
@@ -252,37 +252,37 @@ JSON d'une commande :
 }
 ```
 
-L'API n'accepte jamais directement un nom de commande Somfy ou une URL arbitraire dans cette route. Le connecteur sélectionne les opérations autorisées par les capacités inventoriées.
+This route never directly accepts a Somfy command name or arbitrary URL. The connector selects operations allowed by inventoried capabilities.
 
-## 8. Limites initiales et arrêt
+## 8. Initial limits and shutdown
 
-| Ressource | Limite proposée |
+| Resource | Proposed limit |
 |---|---|
-| JSON API ordinaire | 256 Kio ; 413 au-delà |
-| Réponse TaHoma setup | 4 Mio décompressés ; erreur explicite au-delà |
-| File de commandes admises | 32 globales, une commande ordinaire active par appareil ; stop prioritaire admis pendant un mouvement |
-| Attente avant transmission | 5 s ; expiration avant envoi si dépassée |
-| Requête HTTP fabricant | Timeout 5 s ; une écriture en vol par box |
-| Suivi de déplacement | Timeout 120 s ; état `Unknown` si résultat non prouvé |
-| Broadcast d'événements | 256 événements ; resync pour lecteur lent |
-| Clients SSE | 16 simultanés ; 429 au-delà |
-| Requêtes au worker SQLite | 64 en attente ; refus borné |
-| Historique de logs en mémoire | 500 lignes, 2 Kio maximum par ligne |
-| Archive de restauration | 50 Mio compressés, 200 Mio extraits, 1 000 entrées |
-| Arrêt SIGTERM | Arrêt admission, annulation flux, clôture stockage, sortie ≤ 10 s |
+| Ordinary API JSON | 256 KiB; 413 above limit |
+| TaHoma setup response | 4 MiB decompressed; explicit error above limit |
+| Admitted command queue | 32 globally, one ordinary active command per device; priority stop admitted during movement |
+| Wait before transmission | 5 s; expire before sending when exceeded |
+| Manufacturer HTTP request | 5 s timeout; one write in flight per gateway |
+| Movement tracking | 120 s timeout; `Unknown` if outcome unproven |
+| Event broadcast | 256 events; resync for slow reader |
+| SSE clients | 16 concurrent; 429 above limit |
+| SQLite worker requests | 64 queued; bounded rejection |
+| In-memory log history | 500 lines, maximum 2 KiB per line |
+| Restore archive | 50 MiB compressed, 200 MiB extracted, 1,000 entries |
+| SIGTERM shutdown | Stop admission, cancel streams, close storage, exit ≤ 10 s |
 
-Les seuils se modifient seulement avec mesure et test associé. Une file pleine n'entraîne jamais un `spawn` sans limite. La commande `Stop` peut remplacer une position non encore envoyée ; elle ne réexécute pas une opération physique déjà incertaine.
+Change thresholds only with a measurement and corresponding test. A full queue never causes unbounded `spawn`. `Stop` may replace a not-yet-sent position; it does not repeat an already uncertain physical operation.
 
-Une commande déjà envoyée n'est déclarée `Cancelled` que sur preuve fabricant ; sinon elle reste en suivi ou devient `Unknown`. La fin d'un déplacement n'interdit pas la réception de sa commande Stop. Le routeur réserve une place de traitement prioritaire à Stop en remplaçant si nécessaire une position non transmise ; il n'augmente pas la borne totale de 32.
+A sent command becomes `Cancelled` only with manufacturer evidence; otherwise it remains tracked or becomes `Unknown`. A movement's completion does not prohibit receiving its Stop command. The router reserves priority processing for Stop by replacing an unsent position if needed; it does not raise the total bound of 32.
 
-La propriété et la disponibilité sont revérifiées juste avant transmission. Passer à `observe` annule les commandes non envoyées et empêche leur départ ultérieur ; une commande déjà transmise conserve son suivi ou devient incertaine, sans promesse de l'arrêter physiquement.
+Recheck ownership/availability immediately before transmission. Switching to `observe` cancels unsent commands and prevents later transmission; a sent command stays tracked or becomes uncertain, without a promise to stop it physically.
 
-Les handlers déjà ouverts et les SSE doivent être annulables pour que l'arrêt gracieux ne reste pas suspendu. L'horloge monotone mesure les délais ; les temps Unix servent à la persistance et à l'affichage.
+Open handlers and SSE must be cancellable so graceful shutdown cannot hang. Use monotonic time for deadlines and Unix time for persistence/display.
 
-## 9. Fixtures communes
+## 9. Shared fixtures
 
-P03 crée uniquement des exemples inventés sous `fixtures/tahoma/` : `setup_io.json`, `setup_rts.json`, `setup_switch.json`, `setup_sensor.json`, `setup_unknown.json`, `events_state.json`, `events_execution.json`, `events_listener_expired.json`, `setup_extra_fields.json` et `setup_invalid.json`.
+P03 creates only invented examples under `fixtures/tahoma/`: `setup_io.json`, `setup_rts.json`, `setup_switch.json`, `setup_sensor.json`, `setup_unknown.json`, `events_state.json`, `events_execution.json`, `events_listener_expired.json`, `setup_extra_fields.json`, and `setup_invalid.json`.
 
-Les exemples utilisent un PIN fictif et des URLs cohérentes mais non réelles. Une conversion de captures réelles doit conserver commandes, types et bornes utiles, tout en remplaçant identifiants, noms de pièces, localisation, comptes et clés. Les formes d'événements réels anonymisés complètent l'OpenAPI si celle-ci manque de détails ; ne pas inventer leur structure en la présentant comme confirmée.
+Examples use a fictional PIN and consistent but unreal URLs. Converting real captures must retain useful commands, types, and bounds while replacing identifiers, room names, locations, accounts, and keys. Anonymized real event shapes supplement OpenAPI if it lacks detail; do not invent a structure and present it as confirmed.
 
-P09 ajoute `fixtures/api/` : instantané, commande, erreurs et resync. P20 ajoute `fixtures/homekit/` : projection et états indisponibles. Les trois couches utilisent la même convention fermé=0/ouvert=100 et les mêmes UUID fictifs.
+P09 adds `fixtures/api/`: snapshot, command, errors, resync. P20 adds `fixtures/homekit/`: projection and unavailable states. All three layers use the same closed=0/open=100 convention and fictional UUIDs.

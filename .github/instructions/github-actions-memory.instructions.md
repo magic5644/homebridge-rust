@@ -1,54 +1,54 @@
 ---
-description: Mémoire du projet pour les contrôles GitHub Actions et la publication des artefacts.
+description: Project memory for GitHub Actions checks and artifact publication.
 applyTo: ".github/workflows/**/*.yml,.github/workflows/**/*.yaml,scripts/**,packaging/**"
 ---
 
 # GitHub Actions Memory
 
-Le dépôt est public. Les validations du code et la publication d'artefacts ont des périmètres distincts. Ces consignes sont des décisions du projet ; leur présence ne signifie pas qu'un workflow existe déjà.
+The repository is public. Code validation and artifact publication have distinct scopes. These instructions are project decisions; their presence alone does not mean a workflow exists.
 
-## CI initiale à réaliser au P02
+## Initial CI delivered by P02
 
-- Fichier `.github/workflows/check.yml`, nom du workflow `CI`, job `rust` avec nom affiché stable `Rust checks`.
-- Déclencheurs : `pull_request`, `push` sur `main`, `workflow_dispatch`. Exécuter aussi le contrôle sur les PR ne touchant que des documents tant que ce job doit servir de contrôle requis ; éviter un filtre de chemins qui le laisserait en attente.
-- Runner GitHub hébergé Linux, version explicite compatible avec les actions sélectionnées. Aucun runner sur le NAS ni dans le réseau domestique pour les PR publiques.
-- Permission de validation : `contents: read` ; aucun secret de déploiement, de compte fabricant ou de production.
-- Actions tierces épinglées au SHA complet vérifié dans leur dépôt officiel ; ajouter un commentaire indiquant la version lisible. Choisir les versions/runtimes depuis la documentation courante, pas depuis un exemple ancien.
-- Checkout sans persistance de credentials pour les étapes de build. Aucun accès en écriture requis pour compiler ou tester.
-- Toolchain depuis `rust-toolchain.toml`, dépendances depuis `Cargo.lock` versionné ; contrôle `--locked` pour clippy, tests et build.
-- Exécuter `sh scripts/check.sh`, également utilisé localement ; les quatre contrôles exacts sont définis dans `AGENTS.md`.
-- Timeout initial de 20 minutes pour le job. Annuler les runs CI précédents du même workflow et de la même branche/PR quand un nouveau commit les remplace ; ne pas appliquer cette annulation à une publication en cours.
-- P02 valide aussi le script par `sh -n`, son comportement en cas d'échec et une exécution Linux réelle dans Actions. Le lint YAML seul ne constitue pas une CI verte.
+- File `.github/workflows/check.yml`, workflow name `CI`, job `rust`, stable display name `Rust checks`.
+- Triggers: `pull_request`, `push` to `main`, `workflow_dispatch`. Run checks for documentation-only PRs too while this job is intended as a required check; avoid path filters that leave it pending.
+- GitHub-hosted Linux runner, explicit version compatible with selected actions. No NAS or home-network runner for public PRs.
+- Validation permission: `contents: read`; no deployment, manufacturer-account, or production secrets.
+- Pin third-party actions to full SHAs verified in their official repositories; add a readable version comment. Choose versions/runtimes from current documentation, not an old example.
+- Checkout must not persist credentials for build steps. No write access is needed to compile/test.
+- Toolchain from `rust-toolchain.toml`, dependencies from versioned `Cargo.lock`; `--locked` for clippy, tests, and build.
+- Execute `sh scripts/check.sh`, also used locally; the four exact checks are defined in `AGENTS.md`.
+- Initial job timeout: 20 minutes. Cancel earlier CI runs for the same workflow and branch/PR when superseded by a new commit; do not cancel an ongoing publication this way.
+- P02 also checks the script with `sh -n`, exercises failure behavior, and proves actual Linux execution in Actions. YAML linting alone is not a green CI run.
 
-## Évolution des contrôles
+## Evolving checks
 
-- P17 ajoute les contrôles frontend quand le frontend existe : installation par lockfile, vérification des types, tests et build statique. Les E2E utilisent le serveur simulé.
-- Les tests de contrats et packaging rejoignent la CI avec les composants concernés. La suite initiale n'annonce pas de tests Somfy/HAP inexistants.
-- Un cache est optionnel : l'ajouter pour un gain mesuré, avec clé tenant compte de l'OS, de la toolchain et du lockfile. Ne jamais mettre en cache secrets, base domestique ou état HomeKit.
-- Garder les noms de contrôles stables ; changer un contrôle requis implique de vérifier les règles GitHub qui l'attendent.
-- Le succès d'un job sur un ancien commit ne prouve pas celui du dernier commit de la PR.
+- P17 adds frontend checks when the frontend exists: lockfile-based installation, type checks, tests, and static build. E2E tests use the simulated server.
+- Contract and packaging tests join CI with their components. Initial tests do not claim nonexistent Somfy/HAP coverage.
+- Caching is optional: add it for measured benefit with keys covering OS, toolchain, and lockfile. Never cache secrets, household databases, or HomeKit state.
+- Keep check names stable; changing a required check requires inspecting the GitHub rules that expect it.
+- A successful job on an old commit does not prove success on the latest PR commit.
 
-## Code de PR non fiable
+## Untrusted PR code
 
-- Utiliser `pull_request` pour les builds/tests ; ne pas exécuter le code de la tête d'une PR sous `pull_request_target` avec droits ou secrets privilégiés.
-- Traiter titre, corps, branche et autres métadonnées de PR comme des données. Ne pas les interpoler directement dans un script shell.
-- Les PR de forks ne reçoivent aucun secret de production. Ne pas changer les permissions pour contourner une étape de test manquante.
-- Contrôler le contenu des logs et artefacts : pas de configuration réelle, token, PIN, noms domestiques ou sauvegarde.
+- Use `pull_request` for builds/tests; do not execute PR-head code under `pull_request_target` with privileged permissions or secrets.
+- Treat titles, bodies, branches, and other PR metadata as data. Never interpolate them directly into shell scripts.
+- Fork PRs receive no production secrets. Do not change permissions to bypass a missing test step.
+- Inspect logs/artifacts: no real configuration, tokens, PINs, household names, or backups.
 
-Ces règles suivent la [documentation GitHub sur l'usage sécurisé](https://docs.github.com/en/actions/reference/security/secure-use) et les [risques de pull_request_target](https://docs.github.com/en/actions/reference/security/securely-using-pull_request_target), consultées via Context7 le 17 octobre 2026.
+These rules follow [GitHub secure-use documentation](https://docs.github.com/en/actions/reference/security/secure-use) and [pull_request_target risks](https://docs.github.com/en/actions/reference/security/securely-using-pull_request_target), consulted through Context7 on October 17, 2026.
 
-## Publication au P30
+## Publication at P30
 
-- La release est un workflow séparé de la CI. Sa réalisation appartient au P30 ; P02 ne publie ni image GHCR, ni paquet QPKG, ni release.
-- Destination prévue : `ghcr.io/magic5644/homebridge-rust`. Docker amd64 prioritaire pour le QNAP ; arm64 secondaire avec niveau de test indiqué.
-- Artefacts : image versionnée/digest, archive native, paquet `.qpkg`, checksums et licences. Construire pour CPU x86_64 générique, sans `target-cpu=native` du poste de compilation.
-- Permissions de publication uniquement dans les jobs qui en ont besoin, par exemple `packages: write` pour GHCR et `contents: write` pour une release, jamais globalement par commodité.
-- Vérifier l'accès anonyme au package si l'image doit être publique ; visibilité du dépôt et visibilité GHCR sont distinctes.
-- Les profils natif et hybride restent identifiés. Une release stable attend les preuves d'acceptation prévues au plan ; aucun déploiement sur le NAS par simple push/tag.
+- Release publication uses a separate workflow. It belongs to P30; P02 publishes no GHCR image, QPKG, or release.
+- Planned destination: `ghcr.io/magic5644/homebridge-rust`. Docker amd64 is the QNAP priority; arm64 is secondary with its testing level identified.
+- Artifacts: versioned/digest image, native archive, `.qpkg`, checksums, and licenses. Build for generic x86_64, without the build machine's `target-cpu=native`.
+- Grant publication permissions only to jobs that need them, such as `packages: write` for GHCR or `contents: write` for a release; never globally for convenience.
+- Verify anonymous package access when an image must be public; repository visibility and GHCR visibility are distinct.
+- Keep native and hybrid profiles identified. A stable release requires planned acceptance evidence; no NAS deployment on a simple push/tag.
 
-## Réglages GitHub et mémoire
+## GitHub settings and memory
 
-- Les valeurs observées à distance sont datées dans `docs/project-state.md`. Les revalider avant de les utiliser ; elles peuvent changer indépendamment du dépôt.
-- Des consignes dans un fichier ne créent pas un contrôle obligatoire ni une protection de branche.
-- Après la première CI verte, proposer les noms de contrôles à rendre requis sur `main`. Toute modification de règles ou de permissions doit correspondre à une demande explicite ; cette session de mémorisation ne les modifie pas.
-- Les capacités Issues/Projects ne signifient pas que les Pxx ont été créés comme issues ; conserver les liens réels lorsqu'ils existent.
+- Date remote observations in `docs/project-state.md`. Revalidate before relying on them; remote settings can change independently of the repository.
+- File instructions do not create mandatory checks or branch protections.
+- After the first green CI, propose check names to require on `main`. Changing rules/permissions requires an explicit request; recording memory does not modify them.
+- Issues/Projects availability does not imply Pxx issues exist; keep only verified links.
