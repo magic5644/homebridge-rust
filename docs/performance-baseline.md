@@ -8,7 +8,7 @@ Date: October 17, 2026. Status: **not measured; installation access missing**.
 |---|---|
 | Target | QNAP TS-251+, Celeron J1900, 2 GB reported; not reverified |
 | QTS, kernel, Container Station, image/digest and resource limits | Not collected |
-| Versions and 23-element scope | Historical UI observations only; see [compatibility](compatibility.md) |
+| Versions and 23-element scope | Rechecked in the existing authenticated Homebridge UI; see [compatibility](compatibility.md). No process measurement follows from these observations |
 | Warmup, sample interval, start/end and 30-minute window | Not run |
 | Required process list and parent/child relationships | Not collected |
 | Per-process RSS/PSS and CPU | Not measured |

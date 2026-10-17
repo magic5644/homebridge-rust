@@ -153,7 +153,7 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 **Dependencies:** P02; read-only access to the installation by an authorized session. **Files:** `docs/compatibility.md`, `docs/performance-baseline.md`, `fixtures/tahoma/*.json`, `tests/fixtures_manifest.json`. Real data: Git-excluded `private/`.
 
-**Status:** partial delivery; blocked on supplied read-only installation access. [Coverage and missing evidence](../../compatibility.md), [baseline](../../performance-baseline.md), [session report](../../sessions/P03.md). P02 integration and its exact-commit main CI were verified at startup; P03 is not complete.
+**Status:** partial delivery; the existing Homebridge UI and all 23 accessory dialogs were inspected read-only with owner authorization. Remaining raw capabilities, action effects and resource evidence are missing. [Coverage and missing evidence](../../compatibility.md), [baseline](../../performance-baseline.md), [session report](../../sessions/P03.md). P02 integration and its exact-commit main CI were verified at startup; P03 is not complete.
 
 **Produces:** anonymized list of 23 visible elements, distinguishing physical devices/actions, used features, and fallback paths.
 
