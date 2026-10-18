@@ -10,7 +10,7 @@ proposed P22 stages and mandatory review. No household compatibility is claimed.
 |---|---|---|
 | Compile unmodified Rust candidate | Rust 1.99.1, `acf45bd`: dependency resolution fails (`ifaddrs` native link conflict) | Candidate cannot be used unchanged |
 | Compile patched fictional bridge | macOS arm64 release build passes; separate experiment lockfile; minimal dependency alias and TLV visibility patch | Does not prove HAP behavior |
-| Generic Linux x86_64 | Local cross-build attempted, fails E0463: Linux standard library not installed in Homebrew toolchain; Podman socket unavailable. CI has an explicit generic `x86-64` release build | Record exact pushed-commit Linux CI result in session report; not a NAS/J1900 run |
+| Generic Linux x86_64 | Local cross-build attempted, fails E0463: Linux standard library not installed in Homebrew toolchain; Podman socket unavailable. [CI run 39118484187](https://github.com/magic5644/homebridge-rust/actions/runs/39118484187) passes the explicit generic `x86-64` release build for `8db503b` | Not a NAS/J1900 run; latest-head CI is recorded in the PR |
 | Upstream automated tests | Nine library tests pass after dependency alias in scratch checkout, 51 upstream warnings; includes one SRP proof unit case | No complete independent encrypted protocol suite |
 | Fictional reads/writes | In-process switch and covering values tested through candidate characteristic APIs | No HTTP/controller read/write proof |
 | Malformed data | Offline tests reproduce panic on truncated TLV; advertised covering bound accepts 101. Explicit qualification run fails both tests | Candidate fails these qualification gates; normal green test run only characterizes the defects |
