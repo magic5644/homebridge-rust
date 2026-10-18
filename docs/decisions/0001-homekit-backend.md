@@ -68,6 +68,21 @@ offline tests. It adds no cryptographic implementation, bypass, or certificate
 validation change. The experiment is a separate Cargo workspace and lockfile;
 the four product packages and product lockfile are unchanged.
 
+## Independent AI specialist review
+
+The owner-requested [HAP/security review](../reviews/P04-hap-security.md) confirms
+additional static-source rejection reasons: unauthenticated characteristic
+routing, incomplete setup admission/retry accounting and active-session revocation,
+encrypted framing/partial-write defects, handler length-check panics and retained
+connection listeners. Locked crypto versions also match two published RustSec
+advisories; remote exploitability is not demonstrated. The review records exact
+source references, required tests and the persistence flush limitation.
+
+These findings strengthen `stop-and-review`. They are not fixes or permission to
+launch the bridge. The specialist is an AI agent; mandatory human review remains
+outstanding. A human assessing a disposable trial must consider these findings,
+not just the two original failing qualification tests.
+
 ## Evidence and approval gates
 
 [The proof ledger](../hardware/hap-proof.md) is authoritative for checks, missing

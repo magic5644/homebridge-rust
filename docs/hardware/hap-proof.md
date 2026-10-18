@@ -27,6 +27,15 @@ No server or multicast advertiser was started during this evaluation. No test
 used TaHoma credentials or a physical command path. No Homebridge configuration,
 production bridge, pairing, room, scene or automation was changed.
 
+## Independent AI review follow-up
+
+The owner-requested [review report](../reviews/P04-hap-security.md) records further
+source-confirmed authorization, setup/revocation, encrypted transport and resource
+lifetime defects, plus advisory-affected dependency versions. No runtime exploit
+or fix is claimed. Keep the bridge stopped while these findings await competent
+human assessment. The dormant procedure below does not authorize a trial.
+This AI review does not fulfill the human-review row of the evidence ledger.
+
 ## Reproduce offline checks
 
 Run from the repository root. On the owner's machine, prefix commands with

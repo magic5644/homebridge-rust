@@ -190,6 +190,7 @@ Partial evidence is not full verification.
 - [x] Prepare a separate fictional switch/covering bridge, offline checks and owner-assisted pairing procedure; no LAN execution or production changes.
 - [x] Reproduce two failed qualification gates (malformed TLV panic; out-of-range covering target accepted).
 - [x] Document bounded native implementation stages and established crypto candidates for human assessment; no P21/P22 implementation.
+- [x] Complete the owner-requested independent AI specialist review and record [source-confirmed rejection reasons](../../reviews/P04-hap-security.md); this is not human sign-off.
 - [ ] Obtain independent full protocol results, Apple Home evidence, runtime prototype measurements and competent human HAP/security review.
 
 
