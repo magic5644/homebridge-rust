@@ -173,7 +173,7 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 **Consumes:** pinned Rust HAP candidates and the HAP protocol requirements. **Produces:** `native-approved`, `native-build-required`, or `stop-and-review` decision plus reproducible evidence. No JavaScript backend. Existing Homebridge is only an interoperability reference/transition path.
 
-- [ ] Targeted audit: toolchain compatibility, dependencies, persistence, permissions, test quality, maintenance needs; compile for generic Linux x86_64.
+- [x] Targeted audit: toolchain compatibility, dependencies, persistence, permissions, test quality, maintenance needs; compile for generic Linux x86_64.
 - [ ] Expose fictional switch/covering; verify discovery, pairing, reads, writes, notifications from a test controller.
 - [ ] Test restart, accessory addition/removal, controller removal, malformed data, clean shutdown; obtain Apple Home evidence on a test bridge.
 - [ ] Measure prototype/document every required fix. No custom cryptography or TLS/auth bypass.
@@ -183,8 +183,8 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 P04 evidence on October 18, 2026: [ADR 0001](../../decisions/0001-homekit-backend.md),
 [proof ledger](../../hardware/hap-proof.md), [session report](../../sessions/P04.md).
-Decision: **`stop-and-review`**. The compound acceptance boxes above remain open:
-partial evidence is not full verification.
+Decision: **`stop-and-review`**. The targeted-audit/Linux compilation box is evidenced by [CI](https://github.com/magic5644/homebridge-rust/actions/runs/39118484187) for `8db503b`; the remaining compound boxes stay open.
+Partial evidence is not full verification.
 
 - [x] Pin and inspect the accessory candidate; document dependency, persistence, validation and resource gaps.
 - [x] Prepare a separate fictional switch/covering bridge, offline checks and owner-assisted pairing procedure; no LAN execution or production changes.
