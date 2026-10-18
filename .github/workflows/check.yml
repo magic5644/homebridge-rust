@@ -31,3 +31,15 @@ jobs:
         run: sh scripts/check.sh
       - name: Check fictional fixtures
         run: python3 -B -m unittest discover -s tests -v
+      - name: Prepare pinned P04 experiment
+        run: sh experiments/hap-proof/prepare.sh
+      - name: Check P04 experiment offline
+        run: |
+          sh -n experiments/hap-proof/prepare.sh experiments/hap-proof/run-isolated.sh
+          cargo fmt --manifest-path experiments/hap-proof/Cargo.toml --package hap-proof -- --check
+          cargo clippy --manifest-path experiments/hap-proof/Cargo.toml --all-targets --no-deps --locked -- -D warnings
+          cargo test --manifest-path experiments/hap-proof/Cargo.toml --locked
+      - name: Compile P04 for generic Linux x86_64
+        env:
+          RUSTFLAGS: -C target-cpu=x86-64
+        run: cargo build --manifest-path experiments/hap-proof/Cargo.toml --release --target x86_64-unknown-linux-gnu --locked

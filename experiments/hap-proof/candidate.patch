@@ -1,0 +1,18 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 3ba0156..58d2429 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -32,3 +32,3 @@ macaddr = { version = "1.0.1", features = ["serde"] }
+ futures = "0.3"
+-get_if_addrs = "0.5"
++get_if_addrs = { package = "if-addrs", version = "0.6" }
+ hkdf = "0.11"
+diff --git a/src/lib.rs b/src/lib.rs
+index c123386..b6c43d5 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -19,3 +19,3 @@ mod pin;
+ mod pointer;
+-mod tlv;
++pub mod tlv;
+ mod transport;
