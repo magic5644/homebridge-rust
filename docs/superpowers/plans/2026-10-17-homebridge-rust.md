@@ -181,6 +181,18 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 **Completion:** human HAP/security review; a compiled example alone does not authorize `native-approved`.
 
+P04 evidence on October 18, 2026: [ADR 0001](../../decisions/0001-homekit-backend.md),
+[proof ledger](../../hardware/hap-proof.md), [session report](../../sessions/P04.md).
+Decision: **`stop-and-review`**. The compound acceptance boxes above remain open:
+partial evidence is not full verification.
+
+- [x] Pin and inspect the accessory candidate; document dependency, persistence, validation and resource gaps.
+- [x] Prepare a separate fictional switch/covering bridge, offline checks and owner-assisted pairing procedure; no LAN execution or production changes.
+- [x] Reproduce two failed qualification gates (malformed TLV panic; out-of-range covering target accepted).
+- [x] Document bounded native implementation stages and established crypto candidates for human assessment; no P21/P22 implementation.
+- [ ] Obtain independent full protocol results, Apple Home evidence, runtime prototype measurements and competent human HAP/security review.
+
+
 ### P05 — Shared types and invariants
 
 **Dependencies:** P03, P04. **Files:** `crates/bridge-core/src/{model,error,event,config}.rs`, `crates/bridge-core/tests/model_contract.rs`, `lib.rs` exports; contract updates if needed.

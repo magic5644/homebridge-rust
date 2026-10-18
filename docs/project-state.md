@@ -1,6 +1,6 @@
 # Project memory and current state
 
-Last updated: October 17, 2026. This file is the session resumption point; code, commits, and CI take precedence when state has not yet been reconciled after a merge.
+Last updated: October 18, 2026. This file is the session resumption point; code, commits, and CI take precedence when state has not yet been reconciled after a merge.
 
 ## Owner decisions
 
@@ -42,14 +42,14 @@ Pxx values are Markdown plan IDs, not GitHub issue numbers. Add an issue/PR link
 | P01 — repository/design | `done`; design published on `main`, initial reference `dec76c0` |
 | Instructions/session memory | Versioned; English-language policy and translation included in P02 at owner request |
 | P02 — Rust workspace/CI | `done`; [PR #1](https://github.com/magic5644/homebridge-rust/pull/1) merged; remote `main` `2c0350c73f2411dabbe1a0d195928593ae566791`, exact-commit [CI passed](https://github.com/magic5644/homebridge-rust/actions/runs/39041606358) |
-| P03 — detailed inventory | `ready_for_review`; [PR #2](https://github.com/magic5644/homebridge-rust/pull/2), branch `feat/p03-inventory-baseline`. Owner-run local setup capture reviewed: 21 entries, 14 known io equipment profiles and seven infrastructure entries. Installation facts, 23-row coverage, nine manufacturer scenarios/usage, Apple dependencies, ten fictional fixtures and capture helper delivered. [Declared profiles](integrations/tahoma-profiles.md) record commands/states and explicit limits. Latest pushed CI and integration must be verified before `done`; resource comparison is deferred |
-| P04 — HAP decision | Not started; P02 dependency available; no native backend approved |
+| P03 — detailed inventory | `done`; [PR #2](https://github.com/magic5644/homebridge-rust/pull/2) merged as `a9021b4ff71341e75f11939b535777bd634ea98b`; exact-commit [main CI passed](https://github.com/magic5644/homebridge-rust/actions/runs/39052106863), verified at P04 startup. Declared profiles, coverage and fictional fixtures integrated; physical qualification remains with later tickets; resource comparison deferred |
+| P04 — HAP decision | `in_progress`; decision `stop-and-review`, branch `feat/p04-hap-decision`. [ADR](decisions/0001-homekit-backend.md), [proof ledger](hardware/hap-proof.md), isolated experiment and staged P22 proposal prepared. No approved backend; Apple Home/protocol evidence and mandatory human HAP/security review missing. See [session report](sessions/P04.md) for exact checks/CI |
 | P05 and later | Not started; follow plan dependencies |
 | Application/tests/CI | P02 minimal CLI and six tests integrated; P03 adds offline fictional-fixture validation. No native compatibility or memory gain demonstrated |
 
 P02 provides four packages (three empty core/integration/transport baselines plus CLI), pinned Rust 1.99.1 and clap 4.6.7/lockfile, MIT license, `scripts/check.sh`, and Linux Actions. `check --config PATH` only verifies UTF-8 readability without writing; schema validation belongs to P07. No device/network implementation exists. P03 changes no implemented runtime interface or dependency. Owner-requested future connection contracts now distinguish local-token/account modes; P05/P07/P11/P23 definitions were updated together, without starting them.
 
-P02 integration was verified at P03 startup: [main CI](https://github.com/magic5644/homebridge-rust/actions/runs/39041606358) passed for `2c0350c73f2411dabbe1a0d195928593ae566791`. P03 validation and PR CI are recorded in [its report](sessions/P03.md); the owner subsequently ran the capture helper and the raw setup criterion is now fulfilled. Latest-commit CI and main integration remain separate gates.
+P02 integration was verified at P03 startup: [main CI](https://github.com/magic5644/homebridge-rust/actions/runs/39041606358) passed for `2c0350c73f2411dabbe1a0d195928593ae566791`. P03 validation and PR CI are recorded in [its report](sessions/P03.md); the owner subsequently ran the capture helper and the raw setup criterion is fulfilled. At P04 startup, PR #2 integration and exact-commit main CI were verified; its pre-merge report is historical.
 
 P03 public artifacts: [coverage matrix](compatibility.md), [baseline status/protocol](performance-baseline.md), and [fixture manifest](../tests/fixtures_manifest.json). Ten examples are entirely fictional; detailed event payloads and profile combinations are not gateway-confirmed. Actual garage/heating/covering declarations are now documented separately; no native compatibility is declared.
 
@@ -80,8 +80,9 @@ Internal addresses, PINs, tokens, and household names are excluded from this pub
 
 ## Resumption point
 
-1. P03 inventory evidence is complete and ready for review; inspect [PR #2](https://github.com/magic5644/homebridge-rust/pull/2) and the [session report](sessions/P03.md). P02 is done.
-2. Verify the latest PR commit CI before integrating. The owner explicitly authorized rebase-merge and branch deletion once P03 is complete. After merge, verify main's exact resulting commit and CI, then reconcile this pre-merge status to done when resuming if necessary. Do not repeat the resolved raw-setup blocker.
-3. Remaining qualification belongs to P11–P14/P33–P35: actual bounds/units, event/error bodies, physical feedback/safety and individual scenario membership. No RTS profile was captured; the RTS fixture remains synthetic. Preserve legacy use paths until each is validated.
-4. P05 still independently requires P04, which was not started. Do not start another ticket automatically. Final legacy/Rust resource comparison stays at P31/P38.
-5. Keep `private/` and credentials local/excluded; preserve `.serena/`. Distinguish declared profiles, fictional tests, owner-run capture, physical validation and verified integration.
+1. P02/P03 are integrated on `main`; P03 merge/CI were verified at P04 startup. Do not repeat its resolved capture/integration blockers.
+2. Review P04's `stop-and-review` [ADR](decisions/0001-homekit-backend.md), [proof ledger](hardware/hap-proof.md) and [session report](sessions/P04.md). Its experiment compiles after a documented dependency fix; two qualification gates fail. Green compilation/CI is not HomeKit approval.
+3. A competent human HAP/security reviewer must assess protocol sources, dependencies, known defects and the staged P22 proposal. Owner-assisted isolated Apple Home tests and independent encrypted protocol verification remain unrun. No production pairing or hardware operation is authorized by this report.
+4. P05 still depends on P04 completion. P21 requires `native-approved`; P22 requires `native-build-required` plus P20/P18/P19. Neither condition is supplied by `stop-and-review`; do not begin another ticket automatically. Final legacy/Rust resource comparison remains P31/P38.
+5. Remaining device qualification belongs to P11–P14/P33–P35: actual bounds/units, event/error bodies, physical feedback/safety and scenario membership. Preserve legacy paths until individually validated.
+6. Keep `private/`, test identities and credentials local/excluded; preserve `.serena/`. Distinguish compilation, offline characterization, protocol tests, actual Apple Home evidence and human review.
