@@ -322,3 +322,20 @@ file may already be visible (durability unknown). Filesystem operations trust th
 application user, administrators and configured ancestor owners; they are not a
 dirfd sandbox against malicious same-user/ancestor races. No existing arbitrary
 parent directory is chmodded to make validation pass.
+
+## 11. Discovery candidates (P10)
+
+`integration_tahoma::discover(Duration)` browses only `_kizboxdev._tcp.local.`.
+A valid `gateway_pin` TXT value determines the canonical `gateway-{pin}.local`
+TLS identity; the advertised display/host name is not authentication. Results use
+neutral `integration_id = tahoma-main` as an unregistered candidate placeholder.
+P11 must bind the operator-configured stable integration ID and match the expected
+private PIN before any credentials are sent. Never derive a public integration ID
+from a private PIN. Manual resolved IPs retain the configured DNS identity.
+
+The adapter bounds scan time to60s and results to64 and deduplicates interfaces by
+validated TXT identity; contradictory ports fail. The async daemon cleanup requests
+shutdown and awaits acknowledgement for at most1s, including cancellation; this
+may synchronously occupy one runtime thread for that interval. mdns-sd owns its
+internal cache, not capped by this adapter. Simulated announcements establish
+parsing/lifecycle behavior, not real discovery, TLS authenticity or NAS behavior.

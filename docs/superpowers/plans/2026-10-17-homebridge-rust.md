@@ -258,9 +258,9 @@ Partial evidence is not full verification.
 
 **Produces:** contractual `discover(Duration)`, without device reads or developer-mode activation.
 
-- [ ] Tests: expected TXT accepted; matching name with different TXT PIN rejected; multi-interface duplicates deduplicated; timeout without results → empty list.
-- [ ] Browse only documented developer service; allow a manual address preserving TLS DNS name.
-- [ ] Run `cargo test -p integration-tahoma --test discovery_contract` with simulated announcements; optional real mDNS test stays separate.
+- [x] Tests: expected TXT accepted; matching name with different TXT PIN rejected; multi-interface duplicates deduplicated; timeout without results → empty list.
+- [x] Browse only documented developer service; allow a manual address preserving TLS DNS name.
+- [x] Run `cargo test -p integration-tahoma --test discovery_contract` with simulated announcements; optional real mDNS test stays separate.
 
 ### P11 — TaHoma HTTP client and TLS validation
 

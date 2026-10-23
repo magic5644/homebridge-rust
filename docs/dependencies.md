@@ -93,3 +93,11 @@ this list after dependencies from later tickets are added.
 | windows-link | 0.2.1 | MIT OR Apache-2.0 |
 | windows-sys | 0.61.2 | MIT OR Apache-2.0 |
 | zmij | 1.0.23 | MIT |
+
+## P10 discovery addition
+
+`integration-tahoma` pins `mdns-sd =0.21.6` (Apache-2.0 OR MIT) with its async
+feature and reuses the workspace Tokio version. Context7 returned unrelated Go
+mDNS matches, so those results were rejected; versioned primary Rust docs/source
+and the official Somfy developer OpenAPI were used instead. See the P10 report
+for source URLs, features and limits. This adds no manufacturer HTTP client.
