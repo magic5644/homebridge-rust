@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "data_dir": "example-private/data",
+  "tahoma": {
+    "mode": "local_token",
+    "integration_id": "tahoma-fictional",
+    "tls_dns_name": "gateway.example.invalid",
+    "port": 8443,
+    "expected_pin": "0000-0000-0000",
+    "resolved_ip": null,
+    "token_file": "example-private/token",
+    "ca_file": "example-ca.pem"
+  },
+  "homekit": {
+    "name": "Fictional bridge",
+    "interface": null,
+    "state_dir": "example-private/homekit",
+    "backend": "stop_and_review"
+  }
+}

@@ -8,3 +8,4 @@ publish.workspace = true
 
 [dependencies]
 clap.workspace = true
+bridge-core = { path = "../bridge-core" }

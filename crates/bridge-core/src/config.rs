@@ -50,6 +50,7 @@ pub enum HomeKitBackend {
 #[serde(deny_unknown_fields)]
 pub struct HomeKitConfig {
     pub name: String,
+    #[serde(default = "default_hap_port")]
     pub port: u16,
     pub interface: Option<String>,
     pub state_dir: PathBuf,
@@ -134,4 +135,98 @@ impl HomeKitConfig {
         }
         Ok(())
     }
+}
+
+fn default_hap_port() -> u16 {
+    51827
+}
+fn default_listen() -> std::net::SocketAddr {
+    std::net::SocketAddr::from(([127, 0, 0, 1], 8582))
+}
+
+// This is a private on-disk configuration, never a public API response.
+#[derive(Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AppConfig {
+    pub schema_version: u32,
+    #[serde(default = "default_listen")]
+    pub listen: std::net::SocketAddr,
+    pub data_dir: PathBuf,
+    pub tahoma: TahomaConfig,
+    pub homekit: HomeKitConfig,
+}
+impl AppConfig {
+    pub fn validate(&self) -> Result<(), BridgeError> {
+        self.tahoma.validate()?;
+        self.homekit.validate()?;
+        if self.schema_version != 1
+            || self.listen.port() == 0
+            || self.listen.port() == self.homekit.port
+        {
+            return Err(BridgeError::Validation);
+        }
+        let mut paths = vec![&self.data_dir, &self.homekit.state_dir];
+        match &self.tahoma {
+            TahomaConfig::LocalToken {
+                token_file,
+                ca_file,
+                ..
+            } => paths.extend([token_file, ca_file]),
+            TahomaConfig::SomfyAccount {
+                credentials_file, ..
+            } => paths.push(credentials_file),
+        };
+        if paths
+            .iter()
+            .any(|p| p.to_str().is_none_or(|s| s.is_empty() || s.contains("://")))
+        {
+            return Err(BridgeError::Validation);
+        }
+        Ok(())
+    }
+}
+/// Parse and validate only; referenced files and network endpoints are not accessed.
+pub fn load_config(path: &std::path::Path) -> Result<AppConfig, BridgeError> {
+    let bytes = crate::secrets::read_private(path, 1024 * 1024)?;
+    let config: AppConfig = serde_json::from_slice(&bytes).map_err(|_| BridgeError::Validation)?;
+    config.validate()?;
+    Ok(config)
+}
+/// Write private gateway selections and file references, never credential contents.
+pub fn save_config_atomic(path: &std::path::Path, config: &AppConfig) -> Result<(), BridgeError> {
+    config.validate()?;
+    use serde_json::json;
+    let tahoma = match &config.tahoma {
+        TahomaConfig::LocalToken {
+            integration_id,
+            tls_dns_name,
+            port,
+            expected_pin,
+            resolved_ip,
+            token_file,
+            ca_file,
+        } => json!({
+            "mode": "local_token", "integration_id": integration_id, "tls_dns_name": tls_dns_name,
+            "port": port, "expected_pin": expected_pin, "resolved_ip": resolved_ip,
+            "token_file": token_file, "ca_file": ca_file,
+        }),
+        TahomaConfig::SomfyAccount {
+            integration_id,
+            provider,
+            gateway_pin,
+            credentials_file,
+        } => json!({
+            "mode": "somfy_account", "integration_id": integration_id, "provider": provider,
+            "gateway_pin": gateway_pin, "credentials_file": credentials_file,
+        }),
+    };
+    let bytes = serde_json::to_vec_pretty(&json!({
+        "schema_version": config.schema_version, "listen": config.listen,
+        "data_dir": config.data_dir, "tahoma": tahoma, "homekit": config.homekit,
+    }))
+    .map_err(|_| BridgeError::Validation)?;
+    if bytes.len() > 1024 * 1024 {
+        return Err(BridgeError::Validation);
+    }
+    crate::secrets::write_private_atomic(path, &bytes)
 }

@@ -1,4 +1,5 @@
-use std::{fs, path::PathBuf, process::ExitCode};
+use bridge_core::config::load_config;
+use std::{path::PathBuf, process::ExitCode};
 
 use clap::{Parser, Subcommand};
 
@@ -11,7 +12,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Check configuration readability (schema validation is not implemented yet).
+    /// Validate private configuration without loading credentials or connecting.
     Check {
         #[arg(long, value_name = "PATH")]
         config: PathBuf,
@@ -22,13 +23,13 @@ fn main() -> ExitCode {
     let Cli {
         command: Commands::Check { config },
     } = Cli::parse();
-    match fs::read_to_string(&config) {
+    match load_config(&config) {
         Ok(_) => {
-            println!("Configuration is readable; schema validation is not implemented yet.");
+            println!("Configuration is valid.");
             ExitCode::SUCCESS
         }
         Err(error) => {
-            eprintln!("Cannot read configuration '{}': {error}", config.display());
+            eprintln!("Cannot validate configuration: {error}");
             ExitCode::FAILURE
         }
     }

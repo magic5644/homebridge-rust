@@ -299,3 +299,26 @@ Examples use a fictional PIN and consistent but unreal URLs. Converting real cap
 P09 adds `fixtures/api/`: snapshot, command, errors, resync. P20 adds `fixtures/homekit/`: projection and unavailable states. All three layers use the same closed=0/open=100 convention and fictional UUIDs.
 
 P05 adds entirely fictional shared type examples under `fixtures/core/`: `contracts.json` (snapshot, discovery/update, commands, admissions/records, identities and events) and `config.json` (both mutually exclusive TaHoma modes, gateway discovery and blocked HomeKit configuration). These internal examples are not public API payloads: internal devices retain `external_id`; P08/P09 must implement the redacted API boundary. All paths/identities/PINs are invented; no file is loaded and no bridge is started by these fixtures.
+
+## 10. Private configuration files (P07)
+
+`bridge_core::config::{AppConfig,load_config,save_config_atomic}` implements schema
+version 1 with `listen: SocketAddr` (default `127.0.0.1:8582`), `data_dir`, `tahoma`
+and `homekit` (default port 51827). Equal API/HAP ports are rejected without probing
+ports. `load_config(&Path)` and `bridge-server check` parse/validate offline and
+never open referenced credential/CA files or connect to devices.
+
+Config files are private (at most 1 MiB, mode 0600, parent 0700). The atomic writer
+uses an explicit private-on-disk representation including gateway selections and
+credential file paths, never loaded credential contents. It is not a public DTO;
+AppConfig/TahomaConfig remain non-Serialize/non-Debug. `secrets::load_secret(&Path)`
+returns a redacted `Secret` (`expose() -> &str`), at most 64 KiB from a private UTF-8
+regular single-link local file. Relative paths resolve from process cwd; actual
+file access rejects symlink components and parent traversal. No URL loading.
+
+Write, fsync or rename failure before replacement preserves the previous file;
+parent-directory fsync failure after rename returns `storage_error` while the new
+file may already be visible (durability unknown). Filesystem operations trust the
+application user, administrators and configured ancestor owners; they are not a
+dirfd sandbox against malicious same-user/ancestor races. No existing arbitrary
+parent directory is chmodded to make validation pass.
