@@ -13,7 +13,8 @@ For CI and GitHub, also apply
 
 Verify Git state, PRs, and that prerequisites are actually available on main.
 Work on a dedicated ticket branch, preserving my changes.
-This session handles one ticket only, without automatic delegation.
+Use one bounded work unit at a time; the owner authorizes ticket chaining and
+parallel independent workers in isolated worktrees under docs/autonomous-development.md.
 Proceed autonomously with all ordinary authorized steps.
 
 Implement the complete minimum with relevant tests and real checks.
@@ -22,7 +23,8 @@ Do not perform a production installation or publish a release.
 Write all project documentation, comments, reports, and PR descriptions in English.
 
 Once local checks pass, commit ticket files, push the branch, and create or
-update a PR to main without merging it. Verify CI for the latest pushed
+update a PR to main. Review and merge autonomously after green latest-head CI,
+then verify the exact main commit CI. Create commits as magic5644. Verify CI for the latest pushed
 commit and fix failures related to the ticket. If essential evidence or a
 prerequisite is inaccessible, explain precisely; never report an unrun check
 as successful.
@@ -33,7 +35,8 @@ Cite the tested implementation commit in the report without trying to make
 the report self-referential.
 
 Conclude with the result, PR link, checks, and remaining limits.
-Stop after this ticket. Do not start the next one.
+Checkpoint the result and continue to the next eligible ticket until the first
+functional test version is delivered, preserving all unevidenced validation limits.
 ```
 
 ## P02 specifics
