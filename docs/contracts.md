@@ -1,6 +1,6 @@
-# Shared contracts — proposed version 1
+# Shared contracts — version 1 (P05 core types)
 
-This document fixes decisions agents need to work independently. P05 translates them into compilable types. The public names below are normative; changes require updating the contract, fixtures, and every consumer in the same work package.
+This document fixes shared decisions. P05 implements the data types in `bridge-core`; storage, adapters, routing and public API implementations remain with their later tickets. The public names below are normative; changes require updating the contract, fixtures, and every consumer in the same work package.
 
 ## 1. Identity and ownership
 
@@ -13,7 +13,7 @@ This document fixes decisions agents need to work independently. P05 translates 
 
 ## 2. Shared model in `bridge-core::model`
 
-Notation: Rust types to create at P05, without prescribing implementation bodies.
+Implemented in `bridge-core::model`, with configuration in `bridge-core::config`, errors in `bridge-core::error`, and events in `bridge-core::event`.
 
 ```rust
 pub type DeviceId = uuid::Uuid;
@@ -90,7 +90,9 @@ pub struct CommandEnvelope {
 
 Shared imports: `BTreeMap = std::collections::BTreeMap`, `Path/PathBuf = std::path::{Path, PathBuf}`, `Duration = std::time::Duration`, `CancellationToken = tokio_util::sync::CancellationToken`; `BridgeError` is defined in `bridge-core::error`. Serialized enums use `snake_case`. `Scalar` is tagged by `kind`/`value`, `Command` by `type`. Data-free `Command` variants become, for example, `{"type":"open"}`.
 
-Rules: position 0 = fully closed, 100 = fully open; tilt −90° to +90° when supported; integer temperatures in hundredths of °C. `SetPosition` and `SetBrightness` accept 0..100 inclusive; manufacturer limits may be stricter. Validate ranges/steps before sending. `Unknown` requires `value = None` and no confirmed observation timestamp. An estimate never becomes `Confirmed` without physical feedback.
+Rules: position 0 = fully closed, 100 = fully open; tilt −90° to +90° when supported; integer temperatures in hundredths of °C. `SetPosition` and `SetBrightness` accept 0..100 inclusive; manufacturer limits may be stricter. Validate ranges/steps before sending. `Unknown` requires `value = None` and no confirmed observation timestamp. Non-unknown samples require a value; confirmed samples also require an observation timestamp. An estimate never becomes `Confirmed` without physical feedback. Validation does not promote quality or update physical state; future adapters must supply actual feedback provenance.
+
+The public fields preserve the contract shapes; deserialization checks representation, not semantic validity. Consumers must call `StateSample::validate_for(key)`, `NumericLimits::validate()` and the relevant config `validate()` before accepting input. Validate numeric state samples against declared device limits with `NumericLimits::validate_value`. `Command::validate()` checks generic bounds; `Command::validate_for(&Device)` additionally checks current ownership, availability, declared capability and applicable manufacturer limits. Recheck immediately before transmission. `Ownership::allows_commands()` and `allows_publication()` are false for both `legacy` and `observe`. These predicates do not grant HomeKit backend approval. No runtime caller exists yet; P06/P07/P11/P18/P20 must enforce these boundaries.
 
 Unrecognized hardware receives no command capabilities. Unknown Somfy fields are tolerated and retained in anonymized fixtures; they do not automatically become generic API commands.
 
@@ -172,6 +174,8 @@ pub enum BridgeEvent {
 }
 ```
 
+`BridgeEvent` uses the internal JSON tag `type` with snake_case variants; see `fixtures/core/contracts.json`.
+
 `sequence` belongs to the current process run, with no durable-resume guarantee. Web events contain no tokens, manufacturer URLs, or pairing keys. Clients always fetch a snapshot after reconnecting. Broadcast loss causes `ResyncRequired`, then a fresh snapshot. HomeKit consumers perform the same reconciliation rather than ignoring lag.
 
 ## 6. Adapter interfaces
@@ -206,11 +210,11 @@ pub async fn run(config: HomeKitConfig, store: Store,
 
 `RawTahomaDevice`, `TahomaEvent`, `TahomaExecution`, and execution DTOs remain connector-private except types explicitly used by public functions. P11 defines their fields from fixtures/OpenAPI; do not generate the entire Somfy API. `TahomaExecution` exposes at least `id: String` and `status: CommandStatus`.
 
-P05 defines `DiscoveredGateway` (TLS DNS name, port, private expected PIN, optional resolved IP, `integration_id`) and mode-specific `TahomaConfig`: common `integration_id` plus a tagged `local_token` configuration (gateway fields, `token_file: PathBuf`, `ca_file: PathBuf`) or `somfy_account` configuration (supported provider/region, private gateway selection, `credentials_file: PathBuf`). Reject mixed-mode fields and arbitrary account endpoints; local mode is recommended. P07 defines private secret loading. No credentials are serialized in public config.
+P05 defines `DiscoveredGateway` (`tls_dns_name: String`, `port: u16`, private `expected_pin: String`, `resolved_ip: Option<IpAddr>`, `integration_id`) and mode-specific `TahomaConfig`, internally tagged by `mode`. `LocalToken` contains `integration_id`, the same four gateway fields, `token_file: PathBuf` and `ca_file: PathBuf`. `SomfyAccount` contains `integration_id`, `provider: SomfyProvider`, private `gateway_pin: String`, and `credentials_file: PathBuf`. `SomfyProvider::SomfyEurope` serializes as `somfy_europe` and identifies the only initially declared provider/region; P11 must validate the actual authentication flow before supporting it. Reject mixed-mode fields and arbitrary account endpoints; local mode is recommended. P07 defines private secret loading. No credentials are serialized in public config. `TahomaConfig` and `DiscoveredGateway` deliberately implement neither `Debug` nor `Serialize`, since they contain private gateway selections. Future public views must use explicit redacted DTOs; future config writing must handle private fields separately. Parser diagnostics may echo input and must be mapped to secret-free `BridgeError` messages at future boundaries. DNS validation is syntactic and rejects URLs/IP literals; an optional resolved IP never replaces the validated TLS DNS identity. P07 owns file access/permissions; P11 owns CA/DNS identity and endpoint verification.
 
 P11 defines connector-private `TahomaCredentials` variants for a loaded local token or Somfy account credentials/session; it must not derive secret-revealing Debug/serialization. `connect` authenticates the selected mode using bounded requests; a mismatch fails without trying the other mode. Account session renewal must preserve the no-replay command rule. No current runtime caller exists: P05/P07/P11/P23 are the affected future consumers. See the [access guide](integrations/tahoma-access.md) for storage and current-source limits.
 
-`HomeKitConfig`: name, TCP port, optional network interface, `state_dir: PathBuf`, backend selected at P04. Generate/store pairing PINs in private state, never in example files.
+`HomeKitConfig`: `name: String`, `port: u16`, `interface: Option<String>`, `state_dir: PathBuf`, `backend: HomeKitBackend`. While P04 is `stop-and-review`, the only backend value is `HomeKitBackend::StopAndReview` (`stop_and_review`). It is a blocked decision marker, never permission to run a transport. The owner exception authorizes P05 types/tests only; it approves no HomeKit backend. An approved future decision must update this enum and every consumer together. Generate/store pairing PINs in private state, never in example files.
 
 Both HomeKit implementation paths are native Rust: a suitable existing stack (P21) or a project HAP implementation (P22), using established cryptographic libraries. No Node/JavaScript backend is allowed. Their shared `run` interface and all safety/persistence rules remain unchanged.
 
@@ -293,3 +297,5 @@ P03 creates only invented examples under `fixtures/tahoma/`: `setup_io.json`, `s
 Examples use a fictional PIN and consistent but unreal URLs. Converting real captures must retain useful commands, types, and bounds while replacing identifiers, room names, locations, accounts, and keys. Anonymized real event shapes supplement OpenAPI if it lacks detail; do not invent a structure and present it as confirmed.
 
 P09 adds `fixtures/api/`: snapshot, command, errors, resync. P20 adds `fixtures/homekit/`: projection and unavailable states. All three layers use the same closed=0/open=100 convention and fictional UUIDs.
+
+P05 adds entirely fictional shared type examples under `fixtures/core/`: `contracts.json` (snapshot, discovery/update, commands, admissions/records, identities and events) and `config.json` (both mutually exclusive TaHoma modes, gateway discovery and blocked HomeKit configuration). These internal examples are not public API payloads: internal devices retain `external_id`; P08/P09 must implement the redacted API boundary. All paths/identities/PINs are invented; no file is loaded and no bridge is started by these fixtures.

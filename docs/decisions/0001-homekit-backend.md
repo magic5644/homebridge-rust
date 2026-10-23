@@ -10,7 +10,10 @@ a complete protocol test suite and competent human HAP/security review are
 missing. Compilation does not satisfy those gates. P21 is unavailable; P22 is a
 **proposed implementation path**, conditional on human review changing this
 ADR to `native-build-required`. Neither ticket was implemented here. P05's P04
-completion dependency remains unsatisfied.
+completion dependency remains unsatisfied. On October 23, 2026, the owner explicitly
+authorized only P05 core types and tests despite this dependency. This limited
+exception does not complete P04, approve a HomeKit backend, authorize launching
+the experiment, or waive later security, interoperability or hardware gates.
 
 The server, integrations and HomeKit transport remain Rust-only. No Node or
 JavaScript server fallback is permitted. Existing Homebridge remains untouched

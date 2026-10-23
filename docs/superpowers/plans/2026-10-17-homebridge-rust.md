@@ -196,14 +196,14 @@ Partial evidence is not full verification.
 
 ### P05 — Shared types and invariants
 
-**Dependencies:** P03, P04. **Files:** `crates/bridge-core/src/{model,error,event,config}.rs`, `crates/bridge-core/tests/model_contract.rs`, `lib.rs` exports; contract updates if needed.
+**Dependencies:** P03, P04. **Limited owner exception (October 23, 2026):** P05 core types/tests may proceed with P04 still `stop-and-review`. P04 is not complete and no backend or subsequent security/interoperability/hardware gate is approved or waived. **Files:** `crates/bridge-core/src/{model,error,event,config}.rs`, `crates/bridge-core/tests/model_contract.rs`, `lib.rs` exports; contract updates if needed.
 
 **Consumes/produces:** every type from contract sections 1–6, exact names/serialization.
 
-- [ ] `position_bounds`: accept 0/100, reject 101; `unsupported_command`: capability mismatch → `validation_error`.
-- [ ] `quality_is_honest`: unknown has no value; estimates never become measurements; `ownership_blocks_writes` for `legacy`/`observe`.
-- [ ] Implement types, errors, validation, including mutually exclusive `local_token`/`somfy_account` config; no HTTP logic or TaHoma dependency in core.
-- [ ] Run `cargo test -p bridge-core --test model_contract`, then workspace checks; save shared JSON examples.
+- [x] `position_bounds`: accept 0/100, reject 101; `unsupported_command`: capability mismatch → `validation_error`.
+- [x] `quality_is_honest`: unknown has no value; estimates never become measurements; `ownership_blocks_writes` for `legacy`/`observe`.
+- [x] Implement types, errors, validation, including mutually exclusive `local_token`/`somfy_account` config; no HTTP logic or TaHoma dependency in core.
+- [x] Run `cargo test -p bridge-core --test model_contract`, then workspace checks; save shared JSON examples.
 
 **Completion:** consumers work without renaming interfaces at will.
 

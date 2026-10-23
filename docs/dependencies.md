@@ -1,4 +1,4 @@
-# Versions and licenses — P02
+# Versions and licenses — P02 baseline and P05 contracts
 
 Versions verified on October 17, 2026. Project code is under the [MIT license](../LICENSE).
 No Homebridge, HAP, or manufacturer code is reused in this baseline.
@@ -29,6 +29,28 @@ Documentation consulted through Context7 (`resolve-library-id`, then `query-docs
 Published versions were also checked against crates.io, static.rust-lang.org, and
 GitHub API; Context7 examples alone do not prove the latest version.
 
+## P05 core additions
+
+Versions checked against crates.io on October 23, 2026, with exact manifest pins
+and the workspace lockfile. No HTTP, storage, TaHoma or HAP dependency is added.
+
+- Serde **1.0.229** with `derive`: shared contract representations.
+- UUID **1.29.0**, defaults disabled, `serde` only: contract aliases/string encoding;
+  no generator, randomness, JavaScript or WebAssembly dependency is needed.
+- Tokio **1.54.1**, defaults disabled, `sync` only: the exact `CommandEnvelope`
+  oneshot sender; no executor, networking, timers or tasks are started.
+- serde_json **1.0.154** is a core **dev-dependency**, for fictional JSON tests.
+
+Context7 `resolve-library-id` then `query-docs` supplied relevant primary guidance:
+[Serde enum representations](https://serde.rs/enum-representations.html),
+[container attributes](https://serde.rs/container-attrs.html),
+[UUID Serde implementation](https://docs.rs/uuid/1.29.0/uuid/serde/index.html),
+and [Tokio oneshot](https://docs.rs/tokio/1.54.1/tokio/sync/oneshot/index.html).
+The Context7 MCP endpoint was called directly because its tools were not exposed
+in this session's tool catalog; resolution and documentation queries succeeded.
+Public queries contained no household data. Primary registry metadata supplied
+published versions; Context7 snippets alone were not treated as version evidence.
+
 ## Locked dependencies
 
 Table derived from `cargo metadata --format-version 1 --locked`, including all targets.
@@ -52,12 +74,22 @@ this list after dependencies from later tickets are added.
 | colorchoice | 1.0.5 | MIT OR Apache-2.0 |
 | heck | 0.5.0 | MIT OR Apache-2.0 |
 | is_terminal_polyfill | 1.70.2 | MIT OR Apache-2.0 |
+| itoa | 1.0.18 | MIT OR Apache-2.0 |
+| memchr | 2.8.3 | Unlicense OR MIT |
 | once_cell_polyfill | 1.70.2 | MIT OR Apache-2.0 |
+| pin-project-lite | 0.2.17 | Apache-2.0 OR MIT |
 | proc-macro2 | 1.0.107 | MIT OR Apache-2.0 |
 | quote | 1.0.47 | MIT OR Apache-2.0 |
+| serde | 1.0.229 | MIT OR Apache-2.0 |
+| serde_core | 1.0.229 | MIT OR Apache-2.0 |
+| serde_derive | 1.0.229 | MIT OR Apache-2.0 |
+| serde_json | 1.0.154 | MIT OR Apache-2.0 |
 | strsim | 0.11.1 | MIT |
 | syn | 3.0.9 | MIT OR Apache-2.0 |
+| tokio | 1.54.1 | MIT |
 | unicode-ident | 1.0.27 | (MIT OR Apache-2.0) AND Unicode-3.0 |
 | utf8parse | 0.2.2 | Apache-2.0 OR MIT |
+| uuid | 1.29.0 | Apache-2.0 OR MIT |
 | windows-link | 0.2.1 | MIT OR Apache-2.0 |
 | windows-sys | 0.61.2 | MIT OR Apache-2.0 |
+| zmij | 1.0.23 | MIT |

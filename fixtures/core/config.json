@@ -1,0 +1,33 @@
+{
+  "local_token": {
+    "mode": "local_token",
+    "integration_id": "tahoma-fictional",
+    "tls_dns_name": "gateway.example.invalid",
+    "port": 8443,
+    "expected_pin": "0000-0000-0000",
+    "resolved_ip": null,
+    "token_file": "example-private/token",
+    "ca_file": "example-ca.pem"
+  },
+  "somfy_account": {
+    "mode": "somfy_account",
+    "integration_id": "tahoma-fictional",
+    "provider": "somfy_europe",
+    "gateway_pin": "0000-0000-0000",
+    "credentials_file": "example-private/account.json"
+  },
+  "gateway": {
+    "integration_id": "tahoma-fictional",
+    "tls_dns_name": "gateway.example.invalid",
+    "port": 8443,
+    "expected_pin": "0000-0000-0000",
+    "resolved_ip": null
+  },
+  "homekit": {
+    "name": "Fictional bridge",
+    "port": 51827,
+    "interface": null,
+    "state_dir": "example-private/homekit",
+    "backend": "stop_and_review"
+  }
+}
