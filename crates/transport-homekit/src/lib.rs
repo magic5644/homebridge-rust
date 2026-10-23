@@ -1,1 +1,3 @@
-//! HomeKit transport; backend decision belongs to P04.
+//! Rust HomeKit transport; native protocol components are developed in bounded stages.
+
+pub mod codec;
