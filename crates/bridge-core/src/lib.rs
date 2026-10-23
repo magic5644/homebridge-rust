@@ -1,6 +1,8 @@
-//! Shared contracts and validation; no I/O or backend implementation.
+//! Shared contracts, configuration, private files, and persistent storage.
 
 pub mod config;
 pub mod error;
 pub mod event;
 pub mod model;
+pub mod secrets;
+pub mod store;

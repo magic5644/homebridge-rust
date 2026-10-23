@@ -213,11 +213,11 @@ Partial evidence is not full verification.
 
 **Produces:** contractual `Store` API, dedicated worker, directory lock.
 
-- [ ] `identity_survives_rename_restart`: same UUID/AID/IID after rename, reorder, temporary removal, reopening; no implicit recycling.
-- [ ] `revision_and_state_commit_together`, `second_writer_refused`, `idempotency_persists`, `interrupted_command_becomes_unknown` with temporary databases.
-- [ ] `disk_full_preserves_previous_state`: simulate write failure; no published revision/success; old database remains readable.
-- [ ] Implement tables/constraints/transactions, 64-slot queue, async API without blocking SQLite on Tokio.
-- [ ] Run `cargo test -p bridge-core --test store_contract --test store_failures`; migration failure preserves/restores the old database.
+- [x] `identity_survives_rename_restart`: same UUID/AID/IID after rename, reorder, temporary removal, reopening; no implicit recycling.
+- [x] `revision_and_state_commit_together`, `second_writer_refused`, `idempotency_persists`, `interrupted_command_becomes_unknown` with temporary databases.
+- [x] `disk_full_preserves_previous_state`: simulate write failure; no published revision/success; old database remains readable.
+- [x] Implement tables/constraints/transactions, 64-slot queue, async API without blocking SQLite on Tokio.
+- [x] Run `cargo test -p bridge-core --test store_contract --test store_failures`; migration failure preserves/restores the old database.
 
 ### P07 — Configuration and local secrets
 
@@ -225,10 +225,10 @@ Partial evidence is not full verification.
 
 **Produces:** `load_config(path: &Path) -> Result<AppConfig, BridgeError>`; `save_config_atomic(path: &Path, config: &AppConfig) -> Result<(), BridgeError>`; `AppConfig` contains listen, data_dir, TahomaConfig, HomeKitConfig.
 
-- [ ] Tests: invalid config rejected without writing, token/account credentials never serialized, mixed-mode fields rejected, 0600 files/0700 directories, previous file retained after failed replacement.
-- [ ] Set schema_version=1, default listen `127.0.0.1:8582`, HAP 51827; validate known conflicts without assuming ports are free.
-- [ ] Load secrets from files, not URLs/command arguments; examples contain no real values.
-- [ ] Run `cargo test -p bridge-core --test config_contract`; `bridge-server check` neither connects to nor modifies devices.
+- [x] Tests: invalid config rejected without writing, token/account credentials never serialized, mixed-mode fields rejected, 0600 files/0700 directories, previous file retained after failed replacement.
+- [x] Set schema_version=1, default listen `127.0.0.1:8582`, HAP 51827; validate known conflicts without assuming ports are free.
+- [x] Load secrets from files, not URLs/command arguments; examples contain no real values.
+- [x] Run `cargo test -p bridge-core --test config_contract`; `bridge-server check` neither connects to nor modifies devices.
 
 ### P08 — Authentication and API envelope
 
@@ -258,9 +258,9 @@ Partial evidence is not full verification.
 
 **Produces:** contractual `discover(Duration)`, without device reads or developer-mode activation.
 
-- [ ] Tests: expected TXT accepted; matching name with different TXT PIN rejected; multi-interface duplicates deduplicated; timeout without results → empty list.
-- [ ] Browse only documented developer service; allow a manual address preserving TLS DNS name.
-- [ ] Run `cargo test -p integration-tahoma --test discovery_contract` with simulated announcements; optional real mDNS test stays separate.
+- [x] Tests: expected TXT accepted; matching name with different TXT PIN rejected; multi-interface duplicates deduplicated; timeout without results → empty list.
+- [x] Browse only documented developer service; allow a manual address preserving TLS DNS name.
+- [x] Run `cargo test -p integration-tahoma --test discovery_contract` with simulated announcements; optional real mDNS test stays separate.
 
 ### P11 — TaHoma HTTP client and TLS validation
 

@@ -39,7 +39,7 @@ and the workspace lockfile. No HTTP, storage, TaHoma or HAP dependency is added.
   no generator, randomness, JavaScript or WebAssembly dependency is needed.
 - Tokio **1.54.1**, defaults disabled, `sync` only: the exact `CommandEnvelope`
   oneshot sender; no executor, networking, timers or tasks are started.
-- serde_json **1.0.154** is a core **dev-dependency**, for fictional JSON tests.
+- serde_json **1.0.154** was introduced for P05 JSON tests and is a core runtime dependency from P07 for private config parsing/writing. P07 adds no external crate; bridge-server now depends on bridge-core for offline configuration validation.
 
 Context7 `resolve-library-id` then `query-docs` supplied relevant primary guidance:
 [Serde enum representations](https://serde.rs/enum-representations.html),
@@ -67,29 +67,91 @@ this list after dependencies from later tickets are added.
 | anstyle-parse | 1.0.0 | MIT OR Apache-2.0 |
 | anstyle-query | 1.1.5 | MIT OR Apache-2.0 |
 | anstyle-wincon | 3.0.11 | MIT OR Apache-2.0 |
+| bitflags | 2.13.2 | MIT OR Apache-2.0 |
+| bumpalo | 3.20.3 | MIT OR Apache-2.0 |
+| cc | 1.10.0 | MIT OR Apache-2.0 |
+| cfg-if | 1.0.5 | MIT OR Apache-2.0 |
 | clap | 4.6.7 | MIT OR Apache-2.0 |
 | clap_builder | 4.6.7 | MIT OR Apache-2.0 |
 | clap_derive | 4.6.7 | MIT OR Apache-2.0 |
 | clap_lex | 1.1.1 | MIT OR Apache-2.0 |
 | colorchoice | 1.0.5 | MIT OR Apache-2.0 |
+| fallible-iterator | 0.3.0 | MIT/Apache-2.0 |
+| fallible-streaming-iterator | 0.1.9 | MIT/Apache-2.0 |
+| fastrand | 2.5.0 | Apache-2.0 OR MIT |
+| find-msvc-tools | 0.1.15 | MIT OR Apache-2.0 |
+| flume | 0.12.0 | Apache-2.0/MIT |
+| foldhash | 0.2.0 | Zlib |
+| futures-core | 0.3.34 | MIT OR Apache-2.0 |
+| futures-sink | 0.3.34 | MIT OR Apache-2.0 |
+| getrandom | 0.4.3 | MIT OR Apache-2.0 |
+| hashbrown | 0.16.1 | MIT OR Apache-2.0 |
+| hashlink | 0.11.1 | MIT OR Apache-2.0 |
 | heck | 0.5.0 | MIT OR Apache-2.0 |
+| if-addrs | 0.15.0 | MIT OR BSD-3-Clause |
 | is_terminal_polyfill | 1.70.2 | MIT OR Apache-2.0 |
 | itoa | 1.0.18 | MIT OR Apache-2.0 |
+| js-sys | 0.3.106 | MIT OR Apache-2.0 |
+| libc | 0.2.191 | MIT OR Apache-2.0 |
+| libsqlite3-sys | 0.36.0 | MIT |
+| lock_api | 0.4.14 | MIT OR Apache-2.0 |
+| log | 0.4.34 | MIT OR Apache-2.0 |
+| mdns-sd | 0.21.6 | Apache-2.0 OR MIT |
 | memchr | 2.8.3 | Unlicense OR MIT |
+| mio | 1.2.4 | MIT |
+| once_cell | 1.21.4 | MIT OR Apache-2.0 |
 | once_cell_polyfill | 1.70.2 | MIT OR Apache-2.0 |
 | pin-project-lite | 0.2.17 | Apache-2.0 OR MIT |
+| pkg-config | 0.3.34 | MIT OR Apache-2.0 |
 | proc-macro2 | 1.0.107 | MIT OR Apache-2.0 |
 | quote | 1.0.47 | MIT OR Apache-2.0 |
+| r-efi | 6.0.0 | MIT OR Apache-2.0 OR LGPL-2.1-or-later |
+| rsqlite-vfs | 0.1.1 | MIT |
+| rusqlite | 0.38.0 | MIT |
+| rustversion | 1.0.23 | MIT OR Apache-2.0 |
+| scopeguard | 1.2.0 | MIT OR Apache-2.0 |
 | serde | 1.0.229 | MIT OR Apache-2.0 |
 | serde_core | 1.0.229 | MIT OR Apache-2.0 |
 | serde_derive | 1.0.229 | MIT OR Apache-2.0 |
 | serde_json | 1.0.154 | MIT OR Apache-2.0 |
+| shlex | 2.0.1 | MIT OR Apache-2.0 |
+| smallvec | 1.16.4 | MIT OR Apache-2.0 |
+| socket-pktinfo | 0.4.1 | MIT |
+| socket2 | 0.6.5 | MIT OR Apache-2.0 |
+| spin | 0.9.9 | MIT |
+| sqlite-wasm-rs | 0.5.5 | MIT |
 | strsim | 0.11.1 | MIT |
 | syn | 3.0.9 | MIT OR Apache-2.0 |
+| thiserror | 2.0.21 | MIT OR Apache-2.0 |
+| thiserror-impl | 2.0.21 | MIT OR Apache-2.0 |
 | tokio | 1.54.1 | MIT |
+| tokio-macros | 2.7.2 | MIT |
 | unicode-ident | 1.0.27 | (MIT OR Apache-2.0) AND Unicode-3.0 |
 | utf8parse | 0.2.2 | Apache-2.0 OR MIT |
 | uuid | 1.29.0 | Apache-2.0 OR MIT |
+| vcpkg | 0.2.15 | MIT/Apache-2.0 |
+| wasi | 0.11.1+wasi-snapshot-preview1 | Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT |
+| wasm-bindgen | 0.2.129 | MIT OR Apache-2.0 |
+| wasm-bindgen-macro | 0.2.129 | MIT OR Apache-2.0 |
+| wasm-bindgen-macro-support | 0.2.129 | MIT OR Apache-2.0 |
+| wasm-bindgen-shared | 0.2.129 | MIT OR Apache-2.0 |
 | windows-link | 0.2.1 | MIT OR Apache-2.0 |
 | windows-sys | 0.61.2 | MIT OR Apache-2.0 |
 | zmij | 1.0.23 | MIT |
+
+## P10 discovery addition
+
+`integration-tahoma` pins `mdns-sd =0.21.6` (Apache-2.0 OR MIT) with its async
+feature and reuses the workspace Tokio version. Context7 returned unrelated Go
+mDNS matches, so those results were rejected; versioned primary Rust docs/source
+and the official Somfy developer OpenAPI were used instead. See the P10 report
+for source URLs, features and limits. This adds no manufacturer HTTP client.
+
+## P06 storage additions
+
+Pinned rusqlite 0.38.0 uses bundled SQLite and its backup API; UUID v4 enables OS
+randomness for persisted identifiers. Tokio runtime/macros/time are test-only
+features for Store; production Store uses its sync channels and one OS thread.
+Existing serde_json is reused at runtime. The all-target inventory above includes
+WASM/UEFI conditional components which are not linked into the Linux NAS server.
+The product remains one native Rust process with bundled SQLite, as planned.
