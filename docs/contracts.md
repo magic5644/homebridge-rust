@@ -88,7 +88,7 @@ pub struct CommandEnvelope {
 }
 ```
 
-Shared imports: `BTreeMap = std::collections::BTreeMap`, `Path/PathBuf = std::path::{Path, PathBuf}`, `Duration = std::time::Duration`, `CancellationToken = tokio_util::sync::CancellationToken`; `BridgeError` is defined in `bridge-core::error`. Serialized enums use `snake_case`. `Scalar` is tagged by `kind`/`value`, `Command` by `type`. Data-free `Command` variants become, for example, `{"type":"open"}`.
+Shared imports: `BTreeMap = std::collections::BTreeMap`, `Path/PathBuf = std::path::{Path, PathBuf}`, `Duration = std::time::Duration`, `CancellationToken = tokio_util::sync::CancellationToken`; `BridgeError` is defined in `bridge-core::error`. Serialized enums use `snake_case`. `Scalar` is tagged by `kind`/`value`, `Command` by `type`. Data-free `Command` variants become, for example, `{"type":"open"}`. Serde ignores extra fields on internally tagged unit commands; parameterized command variants reject unknown fields. Extra keys are never interpreted as manufacturer operations or URLs; P08 owns any stricter outer API policy.
 
 Rules: position 0 = fully closed, 100 = fully open; tilt −90° to +90° when supported; integer temperatures in hundredths of °C. `SetPosition` and `SetBrightness` accept 0..100 inclusive; manufacturer limits may be stricter. Validate ranges/steps before sending. `Unknown` requires `value = None` and no confirmed observation timestamp. Non-unknown samples require a value; confirmed samples also require an observation timestamp. An estimate never becomes `Confirmed` without physical feedback. Validation does not promote quality or update physical state; future adapters must supply actual feedback provenance.
 
