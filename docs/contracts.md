@@ -156,9 +156,9 @@ P06 implements `schema_migrations`, `devices`, `hap_ids`, `commands`, `sessions`
 
 The revision is a persistent increasing integer for every snapshot change. Commands have their own state and do not simulate physical measurement changes. State events are emitted only after the transaction commits.
 
-Create newly discovered devices in `observe`. A new inventory never changes previously chosen ownership. Integration availability is persisted in `settings` and emits `IntegrationChanged` only after commit.
+Create newly discovered devices in `observe`. A new inventory never changes previously chosen ownership. Integration availability is persisted in `settings` and emits `IntegrationChanged` only after commit. Setting an integration unavailable also marks its available devices unavailable in the same transaction/revision, allowing snapshots to reconcile after event loss. Incoming discovery/updates cannot override a persisted unavailable integration. Restoring the integration flag alone does not invent individual device recovery; fresh discovery/updates must do that. State values/quality are unchanged by this availability operation; P14 owns staleness policy.
 
-Idempotency: same request_id and normalized command → existing receipt, no new send; same ID with different content → conflict. Retain at least 24 h, maximum 10,000 commands; when saturated within this window, reject new commands instead of deleting a still-valid key. Nonterminal commands become `Unknown` on restart, without retransmission.
+Idempotency: same request_id and normalized command → existing receipt, no new send; same ID with different content → conflict. Retain at least 24 h, maximum 10,000 commands; when saturated within this window, reject new commands instead of deleting a still-valid key. Nonterminal commands become `Unknown` on restart, without retransmission. Explicit trustworthy late execution evidence may resolve Unknown to Succeeded/Failed/Cancelled; it can never reopen Accepted/Sent/Running or transmission. Other terminal outcomes are immutable except same-value idempotency. Tracking callers must provide manufacturer evidence, particularly for Cancelled.
 
 Decide `CommandAdmission.is_new` transactionally. Only `true` permits router transmission; a duplicate whose receipt is still `Accepted` must not cause a second send. `is_new` remains internal: the API returns the receipt with HTTP 202 or 200 as appropriate. `mark_sent` persists the manufacturer execution ID and `Sent` status together.
 
@@ -333,9 +333,17 @@ P11 must bind the operator-configured stable integration ID and match the expect
 private PIN before any credentials are sent. Never derive a public integration ID
 from a private PIN. Manual resolved IPs retain the configured DNS identity.
 
-The adapter bounds scan time to60s and results to64 and deduplicates interfaces by
+The adapter bounds scan time to 60s and results to 64 and deduplicates interfaces by
 validated TXT identity; contradictory ports fail. The async daemon cleanup requests
-shutdown and awaits acknowledgement for at most1s, including cancellation; this
+shutdown and awaits acknowledgement for at most 1s, including cancellation; this
 may synchronously occupy one runtime thread for that interval. mdns-sd owns its
 internal cache, not capped by this adapter. Simulated announcements establish
 parsing/lifecycle behavior, not real discovery, TLS authenticity or NAS behavior.
+
+P06 Store runs all filesystem/SQLite work on one dedicated worker. New data directories
+are 0700 and DB/lock/backup files 0600; unsafe existing final paths, symlinks, nonregular
+files or modes fail closed without chmod. Ancestor owners/application user/admin are
+trusted. `backup_to` requires a new destination and removes incomplete new copies,
+preserving existing backups. Dropping all Store handles closes the 64-slot queue;
+admitted storage work drains before the worker releases the directory lock. P16
+must account for that drain and cancel/wait owned runtime work during shutdown.

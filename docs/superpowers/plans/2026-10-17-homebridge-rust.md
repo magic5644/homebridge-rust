@@ -213,11 +213,11 @@ Partial evidence is not full verification.
 
 **Produces:** contractual `Store` API, dedicated worker, directory lock.
 
-- [ ] `identity_survives_rename_restart`: same UUID/AID/IID after rename, reorder, temporary removal, reopening; no implicit recycling.
-- [ ] `revision_and_state_commit_together`, `second_writer_refused`, `idempotency_persists`, `interrupted_command_becomes_unknown` with temporary databases.
-- [ ] `disk_full_preserves_previous_state`: simulate write failure; no published revision/success; old database remains readable.
-- [ ] Implement tables/constraints/transactions, 64-slot queue, async API without blocking SQLite on Tokio.
-- [ ] Run `cargo test -p bridge-core --test store_contract --test store_failures`; migration failure preserves/restores the old database.
+- [x] `identity_survives_rename_restart`: same UUID/AID/IID after rename, reorder, temporary removal, reopening; no implicit recycling.
+- [x] `revision_and_state_commit_together`, `second_writer_refused`, `idempotency_persists`, `interrupted_command_becomes_unknown` with temporary databases.
+- [x] `disk_full_preserves_previous_state`: simulate write failure; no published revision/success; old database remains readable.
+- [x] Implement tables/constraints/transactions, 64-slot queue, async API without blocking SQLite on Tokio.
+- [x] Run `cargo test -p bridge-core --test store_contract --test store_failures`; migration failure preserves/restores the old database.
 
 ### P07 — Configuration and local secrets
 

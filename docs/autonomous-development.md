@@ -59,10 +59,11 @@ checkbox stays open when only simulation is available; continue independent work
 - Baseline: `082bf62c8e63ea55fb8c0b4be0bb51301292fcd3`, P05 integrated; main CI
   [39994576717](https://github.com/magic5644/homebridge-rust/actions/runs/39994576717) passed.
 - Policy PR #5 merged as `cf68db90be839eaa7c3315955db164588739ff14`; exact main CI39995632853 passed.
-- Active integration: P07 PR #6 merged `2280798` (head CI39996244873 passed, main CI pending verification); P10 integration branch `feat/p10-discovery-integration` has worker commits45d79e2/f2ce069, cross-reviewed, checks/PR pending.
-- P06 source commits41434238/fe3d6496 in worktree `homebridge-p06-storage`, full tests and independent review passed; integrate next after P10.
+- Active integration: P07 PR #6 merged `2280798`, exact main CI39996760608 passed. P10 PR #7 merged `ec62b2d`, head CI39997022605 passed, exact main CI39997461671 passed.
+- P06 source commits41434238/fe3d6496 integrated with P07/P10 on `feat/p06-storage-integration` in worktree `homebridge-p06-storage`, manifest/export/lock conflicts resolved and all four checks passed; PR next.
 - P22-A independent library codec commits08a802e/5ed95e8 in worktree `homebridge-p22-codec`, all6 codec tests/four workspace checks and independent review passed; integrate after foundations. No runtime or pairing implemented.
-- P11 primary-source research is available from the config worker; persist its minimum in P11 design notes before spawning a fresh implementation context.
+- P11 client worker runs in `homebridge-p11-client` on `feat/p11-tahoma-client` from main ec62b2d + persisted source design note0e86e8b. Only fixture HTTPS traffic/public docs permitted.
+- P22-B pairing worker runs in `homebridge-p22-pairing` from P22-A baseline5ed95e8; pure accessory pairing library, no runtime/mDNS/equipment. Reuse maintained hap-crypto accessory SRP primitive if its API/evidence fits; build the missing accessory state machines.
 - Owner follow-up: a usable Rust HomeKit library is required for the first test version; analyze source/REA where useful, maintain/fix an existing library or build the missing library from maintained primitives. Do not ship only a UI/simulator while silently dropping HomeKit.
 - Resume by reading this checkpoint, project-state active rows, the chosen ticket,
   relevant contract sections and owned files. Do not replay the complete chat.
