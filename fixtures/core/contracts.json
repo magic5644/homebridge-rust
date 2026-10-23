@@ -1,0 +1,178 @@
+{
+  "snapshot": {
+    "revision": 1,
+    "devices": [
+      {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "integration_id": "tahoma-fictional",
+        "external_id": "fictional-device",
+        "name": "Fictional covering",
+        "capabilities": [
+          "position",
+          "open_close_stop"
+        ],
+        "limits": {
+          "position_pct": {
+            "min": 0,
+            "max": 100,
+            "step": 1
+          }
+        },
+        "ownership": "observe",
+        "available": true,
+        "states": {
+          "position_pct": {
+            "value": {
+              "kind": "integer",
+              "value": 50
+            },
+            "quality": "estimated",
+            "observed_at_ms": 1000
+          },
+          "door_state": {
+            "value": null,
+            "quality": "unknown",
+            "observed_at_ms": null
+          }
+        }
+      }
+    ]
+  },
+  "discovered_device": {
+    "external_id": "fictional-device",
+    "name": "Fictional covering",
+    "capabilities": [
+      "position",
+      "open_close_stop"
+    ],
+    "limits": {
+      "position_pct": {
+        "min": 0,
+        "max": 100,
+        "step": 1
+      }
+    },
+    "available": true,
+    "states": {
+      "position_pct": {
+        "value": {
+          "kind": "integer",
+          "value": 50
+        },
+        "quality": "estimated",
+        "observed_at_ms": 1000
+      },
+      "door_state": {
+        "value": null,
+        "quality": "unknown",
+        "observed_at_ms": null
+      }
+    }
+  },
+  "device_update": {
+    "device_id": "00000000-0000-4000-8000-000000000001",
+    "available": false,
+    "states": {}
+  },
+  "command_record": {
+    "request": {
+      "request_id": "00000000-0000-4000-8000-000000000010",
+      "device_id": "00000000-0000-4000-8000-000000000001",
+      "command": {
+        "type": "set_position",
+        "position_pct": 100
+      },
+      "origin": "test"
+    },
+    "receipt": {
+      "command_id": "00000000-0000-4000-8000-000000000020",
+      "request_id": "00000000-0000-4000-8000-000000000010",
+      "status": "unknown"
+    },
+    "created_at_ms": 1000,
+    "updated_at_ms": 2000,
+    "upstream_execution_id": null
+  },
+  "command_admission": {
+    "receipt": {
+      "command_id": "00000000-0000-4000-8000-000000000020",
+      "request_id": "00000000-0000-4000-8000-000000000010",
+      "status": "unknown"
+    },
+    "is_new": false
+  },
+  "hap_identity": {
+    "aid": 2,
+    "iids": {
+      "covering": 10
+    }
+  },
+  "commands": [
+    {
+      "type": "open"
+    },
+    {
+      "type": "close"
+    },
+    {
+      "type": "stop"
+    },
+    {
+      "type": "set_position",
+      "position_pct": 100
+    },
+    {
+      "type": "set_tilt",
+      "degrees": -30
+    },
+    {
+      "type": "set_power",
+      "on": true
+    },
+    {
+      "type": "set_brightness",
+      "percent": 50
+    },
+    {
+      "type": "set_setpoint",
+      "centi_celsius": 2150
+    },
+    {
+      "type": "trigger_garage"
+    }
+  ],
+  "events": [
+    {
+      "sequence": 1,
+      "event": {
+        "type": "snapshot_changed",
+        "revision": 1,
+        "device_ids": [
+          "00000000-0000-4000-8000-000000000001"
+        ]
+      }
+    },
+    {
+      "sequence": 2,
+      "event": {
+        "type": "command_changed",
+        "command_id": "00000000-0000-4000-8000-000000000020",
+        "status": "unknown"
+      }
+    },
+    {
+      "sequence": 3,
+      "event": {
+        "type": "integration_changed",
+        "integration_id": "tahoma-fictional",
+        "available": false
+      }
+    },
+    {
+      "sequence": 4,
+      "event": {
+        "type": "resync_required"
+      }
+    }
+  ]
+}

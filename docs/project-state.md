@@ -1,6 +1,6 @@
 # Project memory and current state
 
-Last updated: October 18, 2026. This file is the session resumption point; code, commits, and CI take precedence when state has not yet been reconciled after a merge.
+Last updated: October 23, 2026. This file is the session resumption point; code, commits, and CI take precedence when state has not yet been reconciled after a merge.
 
 ## Owner decisions
 
@@ -15,6 +15,7 @@ Last updated: October 18, 2026. This file is the session resumption point; code,
 - Evaluate Rust HAP libraries at P04. If none fits, implement native HAP at P22 using established cryptographic libraries; retain interoperability/security validation before production use.
 - Defer the legacy-versus-Rust resource comparison to final validation (P31/P38). The 30-minute initial measurement is not a P03 completion gate or prerequisite for development. Preserve comparable legacy operation until the final comparison.
 - TaHoma must offer recommended local-token mode and explicit Somfy-account mode, implemented entirely in Rust. No silent cloud fallback. Token acquisition and secret handling: [access guide](integrations/tahoma-access.md). No token transfer to the agent is required.
+- **Limited P05 exception (October 23, 2026):** the owner explicitly authorizes P05 core types/tests despite P04 remaining `stop-and-review`. This does not complete P04, approve any HomeKit backend or waive later security, interoperability or hardware requirements. No P04 experiment launch is authorized.
 - Gradual migration preserving existing operation; no physical control or production changes in a standard coding session.
 
 ## Where to find information
@@ -31,7 +32,7 @@ Last updated: October 18, 2026. This file is the session resumption point; code,
 | Sources/research evidence | [Research](research.md) |
 | Versions/licenses | [Dependencies](dependencies.md) |
 | CI/publication rules | [GitHub Actions memory](../.github/instructions/github-actions-memory.instructions.md) |
-| Ticket session result | [P02 report](sessions/P02.md), [P03 report](sessions/P03.md); future `docs/sessions/PXX.md` |
+| Ticket session result | [P02 report](sessions/P02.md), [P03 report](sessions/P03.md), [P04 report](sessions/P04.md), [P05 report](sessions/P05.md); future `docs/sessions/PXX.md` |
 
 Pxx values are Markdown plan IDs, not GitHub issue numbers. Add an issue/PR link only after creating or verifying it.
 
@@ -43,11 +44,12 @@ Pxx values are Markdown plan IDs, not GitHub issue numbers. Add an issue/PR link
 | Instructions/session memory | Versioned; English-language policy and translation included in P02 at owner request |
 | P02 — Rust workspace/CI | `done`; [PR #1](https://github.com/magic5644/homebridge-rust/pull/1) merged; remote `main` `2c0350c73f2411dabbe1a0d195928593ae566791`, exact-commit [CI passed](https://github.com/magic5644/homebridge-rust/actions/runs/39041606358) |
 | P03 — detailed inventory | `done`; [PR #2](https://github.com/magic5644/homebridge-rust/pull/2) merged as `a9021b4ff71341e75f11939b535777bd634ea98b`; exact-commit [main CI passed](https://github.com/magic5644/homebridge-rust/actions/runs/39052106863), verified at P04 startup. Declared profiles, coverage and fictional fixtures integrated; physical qualification remains with later tickets; resource comparison deferred |
-| P04 — HAP decision | Evaluation artifacts `ready_for_review` in [PR #3](https://github.com/magic5644/homebridge-rust/pull/3); decision `stop-and-review`, branch `feat/p04-hap-decision`. Implementation commit `8db503b` has [passing CI](https://github.com/magic5644/homebridge-rust/actions/runs/39118484187), including generic Linux x86_64 compilation. P04 acceptance is incomplete; latest PR-head checks remain authoritative. [ADR](decisions/0001-homekit-backend.md), [proof ledger](hardware/hap-proof.md), isolated experiment and staged P22 proposal prepared. Owner-requested [AI specialist review](reviews/P04-hap-security.md) completed and adds source-confirmed rejection reasons; it does not satisfy human sign-off. No approved backend; Apple Home/protocol evidence and mandatory human HAP/security review missing. See [session report](sessions/P04.md) for exact checks/CI |
-| P05 and later | Not started; follow plan dependencies |
-| Application/tests/CI | P02 minimal CLI and six tests integrated; P03 adds offline fictional-fixture validation. No native compatibility or memory gain demonstrated |
+| P04 — HAP decision | Evaluation integrated via [PR #3](https://github.com/magic5644/homebridge-rust/pull/3), merged October 23 as `3b770b4a8b4af8163223524eb923a6f32b7809dc`; exact-commit push-to-main [CI passed](https://github.com/magic5644/homebridge-rust/actions/runs/39991787981), verified at P05 startup. **P04 acceptance remains incomplete**, decision `stop-and-review`; no approved backend. [ADR](decisions/0001-homekit-backend.md), [proof ledger](hardware/hap-proof.md) and [AI security review](reviews/P04-hap-security.md) remain authoritative. Apple Home interoperability, independent encrypted protocol evidence and mandatory competent human HAP/security review are missing. Earlier pre-merge reports are historical |
+| P05 — shared types/invariants | `ready_for_review` in [PR #4](https://github.com/magic5644/homebridge-rust/pull/4), branch `feat/p05-shared-types`; tested implementation `2ec2150a7685c13f062a4dd3445ae7c4ef786c02`, [CI passed](https://github.com/magic5644/homebridge-rust/actions/runs/39993316818). The latest documentation-inclusive PR-head checks remain authoritative. Only core types/tests are authorized by the limited exception above. Shared models, errors, events, mode-exclusive configuration and fictional JSON examples; no runtime backend |
+| P06 and later | Not started; follow dependencies and owner-selected sessions. P05 is not yet integrated on main |
+| Application/tests/CI | P02 minimal CLI and six tests integrated; P03 adds offline fictional-fixture validation. P05 branch adds 10 offline core contract tests. No native compatibility or memory gain demonstrated |
 
-P02 provides four packages (three empty core/integration/transport baselines plus CLI), pinned Rust 1.99.1 and clap 4.6.7/lockfile, MIT license, `scripts/check.sh`, and Linux Actions. `check --config PATH` only verifies UTF-8 readability without writing; schema validation belongs to P07. No device/network implementation exists. P03 changes no implemented runtime interface or dependency. Owner-requested future connection contracts now distinguish local-token/account modes; P05/P07/P11/P23 definitions were updated together, without starting them.
+P02 provides four packages (initially empty core/integration/transport baselines plus CLI), pinned Rust 1.99.1 and clap 4.6.7/lockfile, MIT license, `scripts/check.sh`, and Linux Actions. `check --config PATH` only verifies UTF-8 readability without writing; schema validation belongs to P07. No device/network implementation exists. P03 changes no implemented runtime interface or dependency. Owner-requested future connection contracts now distinguish local-token/account modes; P05/P07/P11/P23 definitions were updated together, without starting them.
 
 P02 integration was verified at P03 startup: [main CI](https://github.com/magic5644/homebridge-rust/actions/runs/39041606358) passed for `2c0350c73f2411dabbe1a0d195928593ae566791`. P03 validation and PR CI are recorded in [its report](sessions/P03.md); the owner subsequently ran the capture helper and the raw setup criterion is fulfilled. At P04 startup, PR #2 integration and exact-commit main CI were verified; its pre-merge report is historical.
 
@@ -80,9 +82,10 @@ Internal addresses, PINs, tokens, and household names are excluded from this pub
 
 ## Resumption point
 
-1. P02/P03 are integrated on `main`; P03 merge/CI were verified at P04 startup. Do not repeat its resolved capture/integration blockers.
-2. Review P04's `stop-and-review` [ADR](decisions/0001-homekit-backend.md), [proof ledger](hardware/hap-proof.md) and [session report](sessions/P04.md). Its experiment compiles after a documented dependency fix; two qualification gates fail. Green compilation/CI is not HomeKit approval.
-3. A competent human HAP/security reviewer must assess protocol sources, dependencies, known defects and the staged P22 proposal. Owner-assisted isolated Apple Home tests and independent encrypted protocol verification remain unrun. No production pairing or hardware operation is authorized by this report.
-4. P05 still depends on P04 completion. P21 requires `native-approved`; P22 requires `native-build-required` plus P20/P18/P19. Neither condition is supplied by `stop-and-review`; do not begin another ticket automatically. Final legacy/Rust resource comparison remains P31/P38.
-5. Remaining device qualification belongs to P11–P14/P33–P35: actual bounds/units, event/error bodies, physical feedback/safety and scenario membership. Preserve legacy paths until individually validated.
-6. Keep `private/`, test identities and credentials local/excluded; preserve `.serena/`. Distinguish compilation, offline characterization, protocol tests, actual Apple Home evidence and human review.
+1. P02/P03 and P04 evaluation artifacts are integrated on `main`. PR #3 merge and exact main-commit CI were verified at P05 startup; P04 integration does **not** satisfy its acceptance gates.
+2. Preserve P04's `stop-and-review` [ADR](decisions/0001-homekit-backend.md), [proof ledger](hardware/hap-proof.md) and [security review](reviews/P04-hap-security.md). Green compilation/CI is not HomeKit approval. Do not launch the bridge.
+3. P05 proceeds only under the owner's explicit limited exception for core types/tests. [PR #4](https://github.com/magic5644/homebridge-rust/pull/4) is `ready_for_review`, with implementation CI verified and a [session report](sessions/P05.md). Verify the latest PR-head checks before merging; after owner merge, verify integration and exact main-commit CI before marking P05 `done`. Do not start P06 automatically.
+4. A competent human HAP/security reviewer must assess protocol sources, dependencies, known defects and the staged P22 proposal. Isolated Apple Home evidence and independent encrypted protocol verification remain absent. P21 still requires `native-approved`; P22 still requires `native-build-required` and its other plan dependencies. P05 grants neither.
+5. Future consumers must call the shared semantic validators, recheck ownership/availability before transmission, preserve unknown/estimated quality and redact internal/private fields. P07 owns configuration file loading and private permissions; P11 owns actual endpoint/authentication validation; P18/P20 own admission/publication enforcement. No current CLI/integration/transport uses these new types.
+6. Remaining device qualification stays with P11–P14/P33–P35: actual bounds/units, event/error bodies, physical feedback/safety and scenario membership. Preserve legacy paths until individually validated. Final legacy/Rust resource comparison remains P31/P38; no gains are measured here.
+7. Keep `private/`, test identities and credentials local/excluded; preserve `.serena/`. No hardware, production pairing, Homebridge or NAS change is authorized by this report.
