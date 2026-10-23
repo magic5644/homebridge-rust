@@ -26,7 +26,7 @@ All documentation, comments, prompts, reports, and PR descriptions must be in En
 
 The [startup prompt](prompts/start-ticket.md) is the single source to copy. Replace only `PXX` with the chosen ID; the first development ticket is P02. Infer files, dependencies, and fixtures from the ticket and verify what actually exists.
 
-The owner requires **one ticket per session**. The session works autonomously on that ticket, creates/updates its PR, verifies CI, and stops. Do not move to the next ticket, delegate, or create another chat without an explicit request.
+The October 23 owner authorization supersedes the previous one-ticket stopping rule. Chain bounded sessions and use independent workers in isolated worktrees with reserved files. The coordinator reviews/integrates each ticket, creates its PR, verifies head CI, merges and verifies main CI. Carry only the active ticket, contracts, affected files and versioned checkpoint between sessions; see [autonomous delivery](autonomous-development.md).
 
 Read [AGENTS.md](../AGENTS.md), [current state](project-state.md), and [GitHub Actions instructions](../.github/instructions/github-actions-memory.instructions.md). The owner selects Luna from models actually available in the environment; the repository does not impose an outdated model reference.
 
@@ -74,7 +74,7 @@ Do not generate universal support based on product-name families. Add a capabili
 
 ## 7. Expected report
 
-Save the report in `docs/sessions/PXX.md` and summarize it in `docs/project-state.md`. It is part of the ticket PR. A ready PR remains `ready_for_review` until integration is verified; it is not a completed ticket on `main`.
+Save the report in `docs/sessions/PXX.md` and summarize it in `docs/project-state.md`. It is part of the ticket PR. A ready PR remains `ready_for_review` until integration is verified. The coordinator may now merge after review/CI; only verified integration and applicable evidence permit `done`.
 
 ```text
 Ticket: Pxx

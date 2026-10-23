@@ -2,7 +2,7 @@
 
 Date: October 18, 2026. Ticket: [P04](../superpowers/plans/2026-10-17-homebridge-rust.md#p04--rust-homekit-decision-maximum-three-day-budget).
 
-## Decision: `stop-and-review`
+## Evaluation: `stop-and-review`; development direction: `native-build-required`
 
 No backend is approved. The evaluated accessory stack requires dependency,
 validation, persistence and resource-control work. Apple Home interoperability,
@@ -23,6 +23,22 @@ This is a bounded evaluation and implementation plan within P04's maximum
 three-engineering-day budget, not delivery of a new HAP stack. More research,
 protocol implementation, pairing and review require separately scoped work;
 time spent waiting for evidence does not manufacture approval.
+
+## October 23 owner authorization — development may proceed
+
+The original evaluation result remains a rejection of the inspected stack.
+The owner now delegates delivery, ticket sequencing, parallel development and
+software review to the coordinator and removes the procedural stop before further
+implementation. The forward development decision is **`native-build-required`**:
+build the Rust transport in bounded P22 stages with maintained crypto primitives,
+independent vectors/negative tests and explicit source provenance. Do not reuse or
+launch the rejected experiment as a product backend. P21 is not selected.
+
+The prior human-before-development pause is superseded for software work only.
+This authorization is not evidence that vulnerabilities are fixed or that a backend
+passes Apple Home/security/hardware validation. Retain all missing evidence in the
+proof ledger; no production installation, physical commands or production pairing
+changes are included. A first test build must disclose its actual validated scope.
 
 ## Candidates and source provenance
 

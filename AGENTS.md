@@ -13,7 +13,7 @@ in the architecture; the documentation language does not change that requirement
 1. Read [current state](docs/project-state.md), the [session guide](docs/prompts/start-ticket.md), and the requested ticket in the [plan](docs/superpowers/plans/2026-10-17-homebridge-rust.md).
 2. Read the relevant parts of the [architecture](docs/architecture.md), [contracts](docs/contracts.md), and [Luna guide](docs/execution-luna.md), then the affected files and their callers.
 3. Check Git status, the branch, existing changes, PRs, and ticket dependencies. A dependency that is only documented or in an unmerged PR is not available on `main`.
-4. Execute **one ticket per session**. Do not start the next ticket, spawn subagents, or create other chats without an explicit request. The owner selects the session model; no automatic model selection.
+4. Under the October 23 autonomous-delivery authorization, chain bounded ticket sessions until the first functional test version is delivered. Read only current state, the active ticket/contracts and affected callers. Parallelize independent work in isolated worktrees with explicit file ownership; one coordinator owns shared contracts, manifests, lockfiles and integration. Keep the owner-selected model; do not choose models automatically. See [autonomous delivery](docs/autonomous-development.md).
 
 The owner's explicit session instructions take precedence over repository conventions. Do not mechanically request approval that has already been given.
 
@@ -58,7 +58,7 @@ Read [.github/instructions/github-actions-memory.instructions.md](.github/instru
 
 - Verify the repository and account before remote writes; use the existing GitHub session without copying a token into a file or command.
 - A code ticket produces a branch, a focused commit, and a PR to `main`, with tests, limits, and a link to the plan ticket. Do not equate Pxx IDs with GitHub issue numbers.
-- Startup prompts authorize committing, pushing the branch, and creating/updating its PR. No automatic merge, release publication, or production installation.
+- The owner authorizes commits, pushes, PR creation and autonomous merge after diff review and green latest-head CI, followed by exact-commit main CI verification. Create commits as `magic5644` using the verified GitHub noreply identity (repository-local config only). This does not authorize production installation, real equipment operation or stable release publication.
 - Wait for CI results for the pushed commit; inspect and fix failures within the ticket's scope. If remote execution is inaccessible or still pending, say so explicitly and do not declare the ticket complete.
 - No workflow deploys to the NAS or uses its home network. Hardware tests remain separate from public PRs.
 
@@ -75,5 +75,5 @@ Read [.github/instructions/github-actions-memory.instructions.md](.github/instru
 - Write `docs/sessions/PXX.md`: goal, branch/PR, tested implementation commit, changes, commands/results, CI state, limits, and dependencies now available. Avoid self-referential hashes: cite the tested commit before adding the report or the last implementation commit.
 - Update `docs/project-state.md` with the result and resumption point. Check off ticket items only with evidence.
 - Distinguish `in_progress`, `implemented`, `ci_pending`, `ready_for_review`, `blocked`, and `done`. `done` requires the ticket criteria and verified integration on `main`; hardware/human tests remain mandatory where required.
-- After the owner merges, the next session verifies the commit and CI, then reconciles state if the previous report still says `ready_for_review`.
-- Conclude with the result, PR/commit, checks, and limits. Stop after this ticket; never start the next automatically.
+- After each merge, verify the exact main commit and CI, then reconcile versioned state at the next bounded session. Historical pre-merge reports remain explicitly historical.
+- Report the result, PR/commit, checks and limits, checkpoint durable state, and continue to the next eligible ticket under the active autonomous goal. Do not mark hardware, interoperability or human review evidence complete without actual results.

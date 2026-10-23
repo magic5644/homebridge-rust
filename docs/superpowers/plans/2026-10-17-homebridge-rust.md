@@ -1,6 +1,6 @@
 # Homebridge Rust — Implementation Plan
 
-> **For agentic workers:** Use `executing-plans` for inline execution of the selected ticket. Steps use checkbox syntax for tracking. The owner requires **one ticket per session**, with an owner-selected model, versioned memory, and a PR. Do not delegate or automatically continue to another ticket. Read `AGENTS.md` and `docs/project-state.md` at startup.
+> **For agentic workers:** Use `executing-plans` for inline execution of the selected ticket. Steps use checkbox syntax for tracking. The October 23 owner authorization permits autonomous ticket chaining and parallel independent workers in isolated worktrees, with an owner-selected model, versioned memory, reviewed PRs and verified CI. See [autonomous delivery](../../autonomous-development.md). Read `AGENTS.md` and `docs/project-state.md` at startup.
 
 **Goal:** Gradually replace the QNAP TS-251+ installation with a Web-administered Rust bridge while preserving io/RTS coverings, garage, heating, and existing actions.
 
@@ -27,7 +27,7 @@
 - Resource comparison is deferred to final validation (P31/P38) by owner decision; no initial measurement gate in P03.
 - Automated tests use fictional data; physical tests are a separate phase with the owner.
 - Prefix local shell commands with `rtk` as required by the environment RTK file; CI uses native tools.
-- Each session handles only the chosen ticket and leaves state in `docs/project-state.md` and a report in `docs/sessions/PXX.md`.
+- Each bounded work unit handles its chosen ticket and leaves state in `docs/project-state.md` and `docs/sessions/PXX.md`; the coordinator continues to eligible tickets under the autonomous goal.
 - All project documentation, comments, prompts, reports, and PR descriptions are written in English.
 
 ## Review Focus
@@ -183,7 +183,7 @@ Dependencies written in individual tickets take precedence over the simplified g
 
 P04 evidence on October 18, 2026: [ADR 0001](../../decisions/0001-homekit-backend.md),
 [proof ledger](../../hardware/hap-proof.md), [session report](../../sessions/P04.md).
-Decision: **`stop-and-review`**. The targeted-audit/Linux compilation box is evidenced by [CI](https://github.com/magic5644/homebridge-rust/actions/runs/39118484187) for `8db503b`; the remaining compound boxes stay open.
+Evaluation result: **`stop-and-review`**; superseded for development planning on October 23 by **`native-build-required`**, with owner-authorized independent software development and review. The unsafe evaluated stack is not approved or launched; missing interoperability/security/hardware evidence stays missing. The targeted-audit/Linux compilation box is evidenced by [CI](https://github.com/magic5644/homebridge-rust/actions/runs/39118484187) for `8db503b`; the remaining compound boxes stay open.
 Partial evidence is not full verification.
 
 - [x] Pin and inspect the accessory candidate; document dependency, persistence, validation and resource gaps.
@@ -390,7 +390,7 @@ Partial evidence is not full verification.
 
 ### P22 — Native Rust HAP implementation, if no suitable library exists
 
-**Dependencies:** P04=`native-build-required`, P20, P18, P19. **Files:** `transport-homekit/src/{lib,native}.rs`, native HAP modules and protocol/interop tests, `docs/decisions/0001-homekit-backend.md`, `docs/hardware/hap-proof.md`.
+**Dependencies:** P04 development direction=`native-build-required`, P20, P18, P19. The October 23 owner authorization permits protocol research and bounded development stages before external human review; production suitability still requires actual security/interoperability evidence. **Files:** `transport-homekit/src/{lib,native}.rs`, native HAP modules and protocol/interop tests, `docs/decisions/0001-homekit-backend.md`, `docs/hardware/hap-proof.md`.
 
 **Produces:** the same native `transport_homekit::run` interface as P21, implemented in Rust with minimum server memory/CPU overhead. No Node process or JavaScript/TypeScript server.
 
@@ -596,7 +596,7 @@ Partial evidence is not full verification.
 
 ## 4. Luna session organization
 
-By default, sessions run sequentially, each on one ticket/branch. Domains below help locate affected files; they launch no parallel agents. If the owner explicitly requests concurrent sessions, use isolated workspaces and reserve shared files.
+The owner now authorizes sequential bounded sessions and parallel independent workers. Use one ticket/branch per worker, isolated workspaces and explicit file reservations. Integrate shared contracts/manifests/lockfiles sequentially.
 
 | Track | Sequential tickets | Main owned files |
 |---|---|---|
