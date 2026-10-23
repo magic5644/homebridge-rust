@@ -58,8 +58,11 @@ checkbox stays open when only simulation is available; continue independent work
 
 - Baseline: `082bf62c8e63ea55fb8c0b4be0bb51301292fcd3`, P05 integrated; main CI
   [39994576717](https://github.com/magic5644/homebridge-rust/actions/runs/39994576717) passed.
-- Coordination branch: `feat/autonomous-first-version` (policy/reconciliation).
-- Active: P06 storage worker; P07 configuration and P10 discovery implementations returned and undergoing independent cross-review/integration. Root also prepares isolated P22 library codec tests (no running server).
+- Policy PR #5 merged as `cf68db90be839eaa7c3315955db164588739ff14`; exact main CI39995632853 passed.
+- Active integration: P07 PR #6 merged `2280798` (head CI39996244873 passed, main CI pending verification); P10 integration branch `feat/p10-discovery-integration` has worker commits45d79e2/f2ce069, cross-reviewed, checks/PR pending.
+- P06 source commits41434238/fe3d6496 in worktree `homebridge-p06-storage`, full tests and independent review passed; integrate next after P10.
+- P22-A independent library codec commits08a802e/5ed95e8 in worktree `homebridge-p22-codec`, all6 codec tests/four workspace checks and independent review passed; integrate after foundations. No runtime or pairing implemented.
+- P11 primary-source research is available from the config worker; persist its minimum in P11 design notes before spawning a fresh implementation context.
 - Owner follow-up: a usable Rust HomeKit library is required for the first test version; analyze source/REA where useful, maintain/fix an existing library or build the missing library from maintained primitives. Do not ship only a UI/simulator while silently dropping HomeKit.
 - Resume by reading this checkpoint, project-state active rows, the chosen ticket,
   relevant contract sections and owned files. Do not replay the complete chat.
