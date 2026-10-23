@@ -225,10 +225,10 @@ Partial evidence is not full verification.
 
 **Produces:** `load_config(path: &Path) -> Result<AppConfig, BridgeError>`; `save_config_atomic(path: &Path, config: &AppConfig) -> Result<(), BridgeError>`; `AppConfig` contains listen, data_dir, TahomaConfig, HomeKitConfig.
 
-- [ ] Tests: invalid config rejected without writing, token/account credentials never serialized, mixed-mode fields rejected, 0600 files/0700 directories, previous file retained after failed replacement.
-- [ ] Set schema_version=1, default listen `127.0.0.1:8582`, HAP 51827; validate known conflicts without assuming ports are free.
-- [ ] Load secrets from files, not URLs/command arguments; examples contain no real values.
-- [ ] Run `cargo test -p bridge-core --test config_contract`; `bridge-server check` neither connects to nor modifies devices.
+- [x] Tests: invalid config rejected without writing, token/account credentials never serialized, mixed-mode fields rejected, 0600 files/0700 directories, previous file retained after failed replacement.
+- [x] Set schema_version=1, default listen `127.0.0.1:8582`, HAP 51827; validate known conflicts without assuming ports are free.
+- [x] Load secrets from files, not URLs/command arguments; examples contain no real values.
+- [x] Run `cargo test -p bridge-core --test config_contract`; `bridge-server check` neither connects to nor modifies devices.
 
 ### P08 — Authentication and API envelope
 

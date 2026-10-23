@@ -59,7 +59,8 @@ checkbox stays open when only simulation is available; continue independent work
 - Baseline: `082bf62c8e63ea55fb8c0b4be0bb51301292fcd3`, P05 integrated; main CI
   [39994576717](https://github.com/magic5644/homebridge-rust/actions/runs/39994576717) passed.
 - Coordination branch: `feat/autonomous-first-version` (policy/reconciliation).
-- Next workers: P06 storage, P07 configuration, P10 discovery; no active workers yet.
+- Active: P06 storage worker; P07 configuration and P10 discovery implementations returned and undergoing independent cross-review/integration. Root also prepares isolated P22 library codec tests (no running server).
+- Owner follow-up: a usable Rust HomeKit library is required for the first test version; analyze source/REA where useful, maintain/fix an existing library or build the missing library from maintained primitives. Do not ship only a UI/simulator while silently dropping HomeKit.
 - Resume by reading this checkpoint, project-state active rows, the chosen ticket,
   relevant contract sections and owned files. Do not replay the complete chat.
 - This checkpoint is updated at integration boundaries; per-ticket reports retain

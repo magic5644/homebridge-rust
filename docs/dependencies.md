@@ -39,7 +39,7 @@ and the workspace lockfile. No HTTP, storage, TaHoma or HAP dependency is added.
   no generator, randomness, JavaScript or WebAssembly dependency is needed.
 - Tokio **1.54.1**, defaults disabled, `sync` only: the exact `CommandEnvelope`
   oneshot sender; no executor, networking, timers or tasks are started.
-- serde_json **1.0.154** is a core **dev-dependency**, for fictional JSON tests.
+- serde_json **1.0.154** was introduced for P05 JSON tests and is a core runtime dependency from P07 for private config parsing/writing. P07 adds no external crate; bridge-server now depends on bridge-core for offline configuration validation.
 
 Context7 `resolve-library-id` then `query-docs` supplied relevant primary guidance:
 [Serde enum representations](https://serde.rs/enum-representations.html),
