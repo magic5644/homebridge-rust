@@ -268,11 +268,11 @@ Partial evidence is not full verification.
 
 **Produces:** contractual `TahomaClient::connect`/DTOs; explicit local-token (recommended) or account mode, reused client, 5 s timeout, 4 MiB setup limit. Follow the [access guide](../../integrations/tahoma-access.md); validate current account flow from primary implementation evidence before coding.
 
-- [ ] Tests: correct Bearer/CA → setup read; invalid token → dedicated error; wrong CA/name → failure; redirect → no second host contacted.
-- [ ] Tests: ignore system proxy variables for gateway; oversized/truncated response → error, no loop; tolerate extra fields.
-- [ ] Test account login/session renewal, selected provider/gateway, credential rejection/expiry and redaction using fictional HTTP fixtures; no silent fallback or command replay.
-- [ ] Implement mode-specific authentication and only required setup/event/execution routes; use verified verbs and encode URL segments. Local mDNS is not required in account mode.
-- [ ] Run `cargo test -p integration-tahoma --test http_contract --test tls_contract`; no tokens in captured test logs.
+- [x] Tests: correct Bearer/CA → setup read; invalid token → dedicated error; wrong CA/name → failure; redirect → no second host contacted.
+- [x] Tests: ignore system proxy variables for gateway; oversized/truncated response → error, no loop; tolerate extra fields.
+- [x] Test account login/session renewal, selected provider/gateway, credential rejection/expiry and redaction using fictional HTTP fixtures; no silent fallback or command replay.
+- [x] Implement mode-specific authentication and only required setup/event/execution routes; use verified verbs and encode URL segments. Local mDNS is not required in account mode.
+- [x] Run `cargo test -p integration-tahoma --test http_contract --test tls_contract`; no tokens in captured test logs.
 
 ### P12 — io covering mapping
 
